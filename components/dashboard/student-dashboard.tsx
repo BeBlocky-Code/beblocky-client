@@ -19,12 +19,15 @@ import { LanguageLogo } from "@/components/shared/language-logos";
 import { CourseCard } from "@/components/shared/course-card";
 import type { IStudentDashboardProps } from "@/types/dashboard-simple";
 import type { ICourse } from "@/types/course";
+import type { IStudentProgress } from "@/types/dashboard-simple";
 import { useSubscription } from "@/hooks/use-subscription";
 import { filterCoursesBySubscription } from "@/lib/utils/subscription-hierarchy";
 import { CourseStatus } from "@/types/course";
 import { progressApi } from "@/lib/api/progress";
 import { studentApi } from "@/lib/api/student";
+import { courseApi } from "@/lib/api/course";
 import { useSession } from "@/lib/auth-client";
+import { encryptEmail } from "@/lib/utils";
 import { useState, useEffect, useMemo } from "react";
 
 export function StudentDashboard({
@@ -36,6 +39,14 @@ export function StudentDashboard({
   const { data: session } = useSession();
   const [enrolledCourses, setEnrolledCourses] = useState<ICourse[]>([]);
   const [studentId, setStudentId] = useState<string | null>(null);
+  const [allProgress, setAllProgress] = useState<IStudentProgress[]>([]);
+  const [recentActivity, setRecentActivity] = useState<
+    Array<{
+      course: ICourse;
+      progress: IStudentProgress;
+    }>
+  >([]);
+  const [averageProgress, setAverageProgress] = useState<number>(0);
 
   // Filter courses based on user's subscription plan and active status
   // This gives us ALL courses the user can access with their current subscription
@@ -46,33 +57,116 @@ export function StudentDashboard({
     );
   }, [courses, subscription?.planName]);
 
-  // Fetch enrolled courses with progress
+  // Fetch all progress data for the student
   useEffect(() => {
-    const fetchEnrolledCourses = async () => {
+    const fetchAllProgressData = async () => {
       if (!session?.user?.id) return;
 
       try {
         // Get student record
         const student = await studentApi.getStudentByUserId(session.user.id);
         setStudentId(student._id);
+        console.log("--------student", student);
 
         // Get student's progress for all courses
         const progressData = await progressApi.getStudentProgress(student._id);
+        setAllProgress(progressData);
+        console.log("--------progressData", progressData);
 
-        // Filter courses that have progress (enrolled)
-        // This gives us only courses the student has actually started
+        // Calculate average progress from completionPercentage attribute
+        if (progressData.length > 0) {
+          const totalPercentage = progressData.reduce(
+            (sum, progress) =>
+              sum + ((progress as any).completionPercentage || 0),
+            0
+          );
+          const average = Math.round(totalPercentage / progressData.length);
+          setAverageProgress(average);
+        } else {
+          setAverageProgress(0);
+        }
+
+        // Map progress data with course information
+        // Use courseId object from progress if available, otherwise find in courses array
+        const activityWithCourses = progressData.map((progress) => {
+          // Extract courseId - it's an object with _id and courseTitle
+          const courseIdObj =
+            typeof progress.courseId === "object" && progress.courseId !== null
+              ? (progress.courseId as any)
+              : null;
+
+          if (!courseIdObj || !courseIdObj._id) {
+            console.warn("No valid courseId found in progress:", progress);
+            return null;
+          }
+
+          // Try to find course in the courses prop array first
+          const courseFromProp = courses.find((c) => c._id === courseIdObj._id);
+
+          // If found in prop, use it; otherwise construct from courseId object
+          // We might not have all properties, but we'll use what we have
+          const course: Partial<ICourse> = courseFromProp
+            ? courseFromProp
+            : {
+                _id: courseIdObj._id,
+                courseTitle: courseIdObj.courseTitle || "Unknown Course",
+                courseLanguage: courseIdObj.courseLanguage || "Unknown",
+                subType: courseIdObj.subType || "Unknown",
+                courseDescription: courseIdObj.courseDescription || "",
+                rating: courseIdObj.rating || 0,
+                status: courseIdObj.status || "Active",
+                createdAt: courseIdObj.createdAt || new Date(),
+                updatedAt: courseIdObj.updatedAt || new Date(),
+              };
+
+          return {
+            course: course as ICourse,
+            progress,
+          };
+        });
+
+        // Filter out null values and ensure both course and progress are valid, then sort by updatedAt (latest first)
+        const validActivity = activityWithCourses
+          .filter(
+            (item): item is { course: ICourse; progress: IStudentProgress } =>
+              item !== null &&
+              item !== undefined &&
+              item.course !== null &&
+              item.course !== undefined &&
+              item.progress !== null &&
+              item.progress !== undefined
+          )
+          .sort((a, b) => {
+            const dateA = new Date(a.progress.updatedAt).getTime();
+            const dateB = new Date(b.progress.updatedAt).getTime();
+            return dateB - dateA; // Latest first
+          });
+
+        setRecentActivity(validActivity);
+
+        // Filter courses that have progress (enrolled) for backwards compatibility
         const enrolled = accessibleCourses.filter((course) =>
-          progressData.some((progress) => progress.courseId === course._id)
+          progressData.some((progress) => {
+            const courseId =
+              typeof progress.courseId === "object" &&
+              progress.courseId !== null
+                ? (progress.courseId as any)._id
+                : progress.courseId;
+            return courseId === course._id;
+          })
         );
 
         setEnrolledCourses(enrolled);
       } catch (error) {
-        console.warn("Failed to fetch enrolled courses:", error);
+        console.warn("Failed to fetch progress data:", error);
+        setAllProgress([]);
+        setRecentActivity([]);
+        setAverageProgress(0);
         setEnrolledCourses([]);
       }
     };
 
-    fetchEnrolledCourses();
+    fetchAllProgressData();
   }, [session?.user?.id, accessibleCourses]);
 
   const containerVariants = {
@@ -165,13 +259,13 @@ export function StudentDashboard({
                       Overall Progress
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {stats.averageProgress}%
+                      {averageProgress}%
                     </span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-3">
                     <div
                       className="bg-gradient-to-r from-primary to-secondary h-3 rounded-full transition-all duration-500"
-                      style={{ width: `${stats.averageProgress}%` }}
+                      style={{ width: `${averageProgress}%` }}
                     />
                   </div>
                 </div>
@@ -182,41 +276,82 @@ export function StudentDashboard({
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+                  <Calendar className="h-5 w-5 text-red" />
                   Recent Activity
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {enrolledCourses.slice(0, 3).map((course, index) => (
-                    <motion.div
-                      key={course._id}
-                      className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                          <LanguageLogo
-                            language={course.courseLanguage}
-                            className="text-white"
-                            size={20}
-                          />
-                        </div>
-                        <div>
-                          <h4 className="font-medium">{course.courseTitle}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {course.courseLanguage}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">{course.subType}</Badge>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </motion.div>
-                  ))}
+              <CardContent className="p-4 sm:p-6">
+                <div className="space-y-3 sm:space-y-4">
+                  {recentActivity.length > 0 ? (
+                    recentActivity
+                      .slice(0, 3)
+                      .filter(
+                        (item) =>
+                          item &&
+                          item.course &&
+                          item.progress &&
+                          item.course._id &&
+                          item.course.courseTitle
+                      )
+                      .map((item, index) => {
+                        const handleClick = () => {
+                          if (session?.user?.email && item.course?._id) {
+                            const encryptedEmail = encryptEmail(
+                              session.user.email
+                            );
+                            const courseUrl = `https://ide.beblocky.com/courses/${item.course._id}/learn/user/${encryptedEmail}`;
+                            window.location.href = courseUrl;
+                          }
+                        };
+
+                        return (
+                          <motion.div
+                            key={item.progress._id}
+                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                            onClick={handleClick}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                          >
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                                <LanguageLogo
+                                  language={
+                                    item.course?.courseLanguage || "Unknown"
+                                  }
+                                  className="text-white"
+                                  size={20}
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-medium text-sm sm:text-base truncate">
+                                  {item.course?.courseTitle || "Unknown Course"}
+                                </h4>
+                                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                                  {item.course?.courseLanguage || "Unknown"} •{" "}
+                                  {(item.progress as any)
+                                    ?.completionPercentage || 0}
+                                  % Complete
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between sm:justify-end gap-2 sm:flex-shrink-0">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs whitespace-nowrap"
+                              >
+                                {item.course?.subType || "Unknown"}
+                              </Badge>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            </div>
+                          </motion.div>
+                        );
+                      })
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <p className="text-sm">No recent activity</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
