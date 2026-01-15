@@ -109,7 +109,6 @@ export function FAQSection() {
         ))}
       </div>
 
-      {/* Contact Support */}
       <motion.div
         className="mt-12 text-center"
         initial={{ opacity: 0, y: 20 }}
