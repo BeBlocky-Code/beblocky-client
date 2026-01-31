@@ -461,18 +461,17 @@ export default function SignUpPage() {
                     <Card
                       className="cursor-pointer transition-all duration-200 hover:border-primary/50 hover:shadow-lg"
                       onClick={() => {
-                        console.log("🎯 [SignUp] User selected: PARENT");
-                        setUserType("parent");
+                        console.log("🎯 [SignUp] User selected: STUDENT");
+                        setUserType("student");
                       }}
                     >
                       <CardContent className="p-6 text-center">
-                        <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-4">
-                          <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
+                        <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center mx-auto mb-4">
+                          <User className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                         </div>
-                        <h3 className="font-semibold text-lg mb-2">Parent</h3>
+                        <h3 className="font-semibold text-lg mb-2">Student</h3>
                         <p className="text-sm text-muted-foreground">
-                          I want my children to learn coding through this
-                          platform
+                          I want to learn coding and programming skills
                         </p>
                       </CardContent>
                     </Card>
@@ -485,17 +484,18 @@ export default function SignUpPage() {
                     <Card
                       className="cursor-pointer transition-all duration-200 hover:border-primary/50 hover:shadow-lg"
                       onClick={() => {
-                        console.log("🎯 [SignUp] User selected: STUDENT");
-                        setUserType("student");
+                        console.log("🎯 [SignUp] User selected: PARENT");
+                        setUserType("parent");
                       }}
                     >
                       <CardContent className="p-6 text-center">
-                        <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center mx-auto mb-4">
-                          <User className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                        <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-4">
+                          <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
                         </div>
-                        <h3 className="font-semibold text-lg mb-2">Student</h3>
+                        <h3 className="font-semibold text-lg mb-2">Parent</h3>
                         <p className="text-sm text-muted-foreground">
-                          I want to learn coding and programming skills
+                          I want my children to learn coding through this
+                          platform
                         </p>
                       </CardContent>
                     </Card>
