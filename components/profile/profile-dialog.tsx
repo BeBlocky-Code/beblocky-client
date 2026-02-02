@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 import { userApi } from "@/lib/api/user";
 import { parentApi } from "@/lib/api/parent";
 import { studentApi } from "@/lib/api/student";
@@ -11,13 +12,14 @@ import { ParentProfileForm } from "@/components/profile/parent-profile-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { User, Loader2, X } from "lucide-react";
+import { User, Loader2, X, Trash2, AlertTriangle } from "lucide-react";
 
 interface ProfileDialogProps {
   open: boolean;
@@ -26,8 +28,14 @@ interface ProfileDialogProps {
 
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [userData, setUserData] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const handleDeleteAccountClick = () => {
+    onOpenChange(false);
+    router.push("/delete-account");
+  };
 
   const fetchUserData = useCallback(async () => {
     if (!session?.user?.id) {
@@ -157,6 +165,33 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                   </p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Danger Zone - Delete Account */}
+          <Separator className="my-6" />
+          
+          <Card className="shadow-lg border-destructive/20">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-destructive">Danger Zone</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Once you delete your account, there is no going back. All your data, progress, and achievements will be permanently removed.
+                  </p>
+                  <Button
+                    variant="destructive"
+                    className="mt-4 gap-2"
+                    onClick={handleDeleteAccountClick}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Account
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

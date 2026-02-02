@@ -226,6 +226,30 @@ class ParentApi {
 
     return response.json();
   }
+
+  // DELETE /parents/:parentId - Delete parent profile
+  async deleteParent(parentId: string): Promise<void> {
+    const authHeaders = await this.getAuthHeaders();
+
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}`;
+
+    console.log("➡️  [Parent API] DELETE deleteParent:", { url, parentId });
+
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: authHeaders,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ [Parent API] deleteParent failed:", errorText);
+      throw new Error(
+        `API Error: ${response.status} - ${response.statusText} - ${errorText}`
+      );
+    }
+
+    console.log("✅ [Parent API] deleteParent success");
+  }
 }
 
 export const parentApi = new ParentApi();

@@ -99,6 +99,29 @@ class UserApi {
 
     return response.json();
   }
+
+  async deleteUser(userId: string): Promise<void> {
+    const authHeaders = await this.getAuthHeaders();
+
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`;
+
+    console.log("➡️  [User API] DELETE deleteUser:", { url, userId });
+
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: authHeaders,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ [User API] deleteUser failed:", errorText);
+      throw new Error(
+        `API Error: ${response.status} - ${response.statusText} - ${errorText}`
+      );
+    }
+
+    console.log("✅ [User API] deleteUser success");
+  }
 }
 
 export const userApi = new UserApi();
