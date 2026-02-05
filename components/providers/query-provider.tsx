@@ -1,9 +1,18 @@
 "use client";
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { getQueryClient } from "@/lib/query-client";
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode, lazy, Suspense } from "react";
+
+// Lazy load devtools only in development
+const ReactQueryDevtools =
+  process.env.NODE_ENV === "development"
+    ? lazy(() =>
+        import("@tanstack/react-query-devtools").then((mod) => ({
+          default: mod.ReactQueryDevtools,
+        }))
+      )
+    : () => null;
 
 interface QueryProviderProps {
   children: ReactNode;
@@ -18,7 +27,7 @@ interface QueryProviderProps {
  * Features:
  * - Uses a singleton QueryClient on the client side
  * - Creates fresh QueryClient on server to avoid cross-request state pollution
- * - Includes React Query Devtools in development mode
+ * - Includes React Query Devtools in development mode (lazy loaded)
  */
 export function QueryProvider({ children }: QueryProviderProps) {
   // Create the query client once per app instance
@@ -29,7 +38,12 @@ export function QueryProvider({ children }: QueryProviderProps) {
     <QueryClientProvider client={queryClient}>
       {children}
       {process.env.NODE_ENV === "development" && (
-        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+        <Suspense fallback={null}>
+          <ReactQueryDevtools
+            initialIsOpen={false}
+            buttonPosition="bottom-left"
+          />
+        </Suspense>
       )}
     </QueryClientProvider>
   );
