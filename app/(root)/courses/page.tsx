@@ -71,18 +71,6 @@ export default function CoursesPage() {
   // Filter only active courses
   const activeCourses = useMemo(() => {
     if (!courses) return [];
-    console.log(
-      "🔍 [activeCourses] All courses before status filtering:",
-      courses
-    );
-    courses.forEach((course, index) => {
-      console.log(`🔍 [activeCourses] Course ${index} status:`, {
-        title: course.courseTitle,
-        status: course.status,
-        isActive: course.status === CourseStatus.ACTIVE,
-        statusValue: CourseStatus.ACTIVE,
-      });
-    });
     return courses.filter((course) => course.status === CourseStatus.ACTIVE);
   }, [courses]);
 
@@ -107,20 +95,9 @@ export default function CoursesPage() {
 
   // Filter courses within each plan
   const filteredCoursesByPlan = useMemo(() => {
-    console.log("🔍 [filteredCoursesByPlan] Starting filtering with:", {
-      searchTerm,
-      selectedLanguage,
-      selectedPlan,
-      coursesByPlanKeys: Object.keys(coursesByPlan),
-    });
-
     const filtered: Record<string, ICourse[]> = {};
 
     Object.entries(coursesByPlan).forEach(([plan, planCourses]) => {
-      console.log(
-        `🔍 [filteredCoursesByPlan] Processing plan "${plan}" with ${planCourses.length} courses`
-      );
-
       const filteredCourses = planCourses.filter((course) => {
         const matchesSearch =
           course.courseTitle
@@ -135,34 +112,14 @@ export default function CoursesPage() {
         const matchesPlan =
           selectedPlan === "all" || course.subType === selectedPlan;
 
-        const passes = matchesSearch && matchesLanguage && matchesPlan;
-
-        if (!passes) {
-          console.log(
-            `🔍 [filteredCoursesByPlan] Course "${course.courseTitle}" filtered out:`,
-            {
-              matchesSearch,
-              matchesLanguage,
-              matchesPlan,
-              courseSubType: course.subType,
-              selectedPlan,
-            }
-          );
-        }
-
-        return passes;
+        return matchesSearch && matchesLanguage && matchesPlan;
       });
-
-      console.log(
-        `🔍 [filteredCoursesByPlan] Plan "${plan}" after filtering: ${filteredCourses.length} courses`
-      );
 
       if (filteredCourses.length > 0) {
         filtered[plan] = filteredCourses;
       }
     });
 
-    console.log("🔍 [filteredCoursesByPlan] Final filtered result:", filtered);
     return filtered;
   }, [coursesByPlan, searchTerm, selectedLanguage, selectedPlan]);
 
@@ -375,22 +332,9 @@ export default function CoursesPage() {
   };
 
   const handleAddToPlan = (courseId: string) => {
-    console.log("Adding course to plan:", courseId);
     // Redirect to upgrade page
     router.push("/upgrade");
   };
-
-  console.log("🎯 [CoursesPage] Rendering with state:", {
-    sessionLoading,
-    loading,
-    error,
-    coursesCount: courses?.length,
-    activeCoursesCount: activeCourses?.length,
-    filteredCount: Object.values(filteredCoursesByPlan).flat().length,
-    userPlan: subscription?.planName || "Free",
-    shouldShowUpgradePrompt:
-      !loading && !error && (!activeCourses || activeCourses.length === 0),
-  });
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">

@@ -24,52 +24,23 @@ export function useCourses(): UseCoursesReturn {
   const [error, setError] = useState<string | null>(null);
 
   const fetchCourses = useCallback(async () => {
-    console.log("🔍 [useCourses] Starting fetchCourses...");
-    console.log("🔍 [useCourses] Session status:", { session, sessionLoading });
-
     // Don't fetch if session is still loading
     if (sessionLoading) {
-      console.log("🔍 [useCourses] Session still loading, skipping fetch");
       return;
     }
 
     try {
       setLoading(true);
       setError(null);
-      console.log("🔍 [useCourses] Calling courseApi.fetchAllCourses()...");
       const data = await courseApi.fetchAllCourses();
-      console.log("🔍 [useCourses] API Response received:", data);
-      console.log("🔍 [useCourses] Data type:", typeof data);
-      console.log(
-        "🔍 [useCourses] Data length:",
-        Array.isArray(data) ? data.length : "Not an array"
-      );
-
-      // Log each course details
-      if (Array.isArray(data)) {
-        data.forEach((course, index) => {
-          console.log(`🔍 [useCourses] Course ${index}:`, {
-            _id: course._id,
-            title: course.courseTitle,
-            status: course.status,
-            subType: course.subType,
-            language: course.courseLanguage,
-            fullCourse: course,
-          });
-        });
-      }
-
       setCourses(data);
-      console.log("🔍 [useCourses] Courses state updated with:", data);
     } catch (err) {
-      console.error("❌ [useCourses] Error in fetchCourses:", err);
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch courses";
       setError(errorMessage);
       console.error("Error fetching courses:", err);
     } finally {
       setLoading(false);
-      console.log("🔍 [useCourses] Loading set to false");
     }
   }, [session, sessionLoading]);
 
@@ -117,11 +88,8 @@ export function useCourses(): UseCoursesReturn {
   }, []);
 
   useEffect(() => {
-    console.log("🔍 [useCourses] useEffect triggered, calling fetchCourses...");
     fetchCourses();
   }, [fetchCourses]);
-
-  console.log("🔍 [useCourses] Current state:", { courses, loading, error });
 
   return {
     courses,

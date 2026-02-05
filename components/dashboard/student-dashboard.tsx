@@ -167,7 +167,8 @@ export function StudentDashboard({
     };
 
     fetchAllProgressData();
-  }, [session?.user?.id, accessibleCourses]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, accessibleCourses, courses]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
