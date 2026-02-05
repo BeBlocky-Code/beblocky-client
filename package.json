@@ -16,6 +16,9 @@
     "maintenance:toggle": "node scripts/toggle-maintenance.js"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.62.0",
+    "@tanstack/react-query-persist-client": "^5.62.0",
+    "@tanstack/query-sync-storage-persister": "^5.62.0",
     "@prisma/client": "^6.13.0",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.3.2",
