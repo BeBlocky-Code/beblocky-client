@@ -7,15 +7,11 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    # Load all env vars from .env.local into the container (BETTER_AUTH_*, DATABASE_URL, RESEND_*, etc.).
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-      - DATABASE_URL=${DATABASE_URL}
-      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL}
-      - RESEND_API_KEY=${RESEND_API_KEY}
-      - NEXT_PUBLIC_CHAPA_PUBLIC_KEY=${NEXT_PUBLIC_CHAPA_PUBLIC_KEY}
-      - CHAPA_SECRET_KEY=${CHAPA_SECRET_KEY}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
