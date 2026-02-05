@@ -1,11 +1,22 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from "@prisma/client";
-import { Resend } from "resend";
 import { PasswordResetEmail } from "@/components/email/password-reset-email";
 import { EmailVerification } from "@/components/email";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-initialize Resend via dynamic import so it's only loaded at runtime when sending email.
+// This avoids build-time errors when RESEND_API_KEY is not set (e.g. in Docker build).
+let resendClient: InstanceType<Awaited<typeof import("resend")>["Resend"]> | null = null;
+async function getResend() {
+  if (!resendClient) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY environment variable is not set");
+    }
+    const { Resend } = await import("resend");
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+}
 
 // Initialize Prisma client
 const prisma = new PrismaClient();
@@ -38,7 +49,7 @@ export const auth = betterAuth({
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
-      resend.emails.send({
+      (await getResend()).emails.send({
         from: "noreply@beblocky.com",
         to: user.email,
         subject: "Beblocky - Verify your email address",
@@ -54,7 +65,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
-      await resend.emails.send({
+      await (await getResend()).emails.send({
         from: "noreply@beblocky.com",
         to: user.email,
         subject: "Beblocky - Reset Your Password",
