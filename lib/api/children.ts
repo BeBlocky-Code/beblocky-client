@@ -31,7 +31,6 @@ export interface IEmergencyContact {
   phone: string;
 }
 
-// Simple API client for children operations
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 async function simpleFetch<T>(
