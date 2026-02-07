@@ -1,4 +1,4 @@
-# =======================================
+# ============================================
 # Stage 1: Dependencies
 # ============================================
 FROM oven/bun:1 AS deps
@@ -22,6 +22,10 @@ WORKDIR /app
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# NEXT_PUBLIC_* are inlined at build time; pass via --build-arg when building.
+ARG NEXT_PUBLIC_API_URL=https://api.beblocky.com
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
