@@ -4,11 +4,10 @@ import { getSession } from "@/lib/auth-client";
 export async function POST(request: NextRequest) {
   try {
     // Get the current session
-    const session = await getSession();
+    const { data: session } = await getSession();
 
-    // Use the same pattern as in user.ts to safely access user ID
-    if (session && typeof session === "object" && "user" in session) {
-      const user = (session as { user: { id: string; email?: string } }).user;
+    if (session?.user?.id) {
+      const user = session.user;
       if (!user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
@@ -29,7 +28,8 @@ export async function POST(request: NextRequest) {
       const { handleParentSignUp } = await import("@/lib/api/role-conversion");
 
       if (targetRole === "parent") {
-        const result = await handleParentSignUp(userId);
+        const currentRole = user.roles?.[0];
+        const result = await handleParentSignUp(userId, currentRole);
 
         if (result.success) {
           return NextResponse.json({
