@@ -89,7 +89,7 @@ export function ForgotPasswordDialog({
 
         if (error) {
           // Handle specific authentication errors with toast
-          const errorMessage = error.message || "Failed to send reset email";
+          const errorMessage = (error as { message?: string }).message ?? "Failed to send reset email";
 
           if (
             errorMessage.includes("Invalid email") ||

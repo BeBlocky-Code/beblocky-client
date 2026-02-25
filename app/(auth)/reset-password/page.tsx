@@ -97,7 +97,7 @@ function ResetPasswordForm() {
           newPassword: password,
           token: token as string,
         } as any);
-        if (error) throw new Error(error.message || "Failed to reset password");
+        if (error) throw new Error((error as { message?: string }).message ?? "Failed to reset password");
         setIsSuccess(true);
         setTimeout(() => {
           router.push("/sign-in");

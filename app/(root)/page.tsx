@@ -220,7 +220,7 @@ export default function DashboardPage() {
     };
 
     loadDashboardData();
-  }, [session?.user?.id, toast]);
+  }, [session?.user?.id, session?.user?.roles, toast]);
 
   // Show loading state while session or data is loading
   if (isPending || loading) {

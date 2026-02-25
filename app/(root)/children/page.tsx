@@ -30,10 +30,12 @@ export default function ChildrenPage() {
   const { toast } = useToast();
 
   const loadData = useCallback(async () => {
+    const userId = session?.user?.id;
+    if (!userId) return;
     try {
       setLoading(true);
       // Get the actual parent ID from the session
-      const parentData = await parentApi.getParentByUserId(session!.user.id);
+      const parentData = await parentApi.getParentByUserId(userId);
       const [childrenData, coursesData] = await Promise.all([
         childrenApi.getChildrenByParent(parentData._id),
         courseApi.fetchAllCourses(),
