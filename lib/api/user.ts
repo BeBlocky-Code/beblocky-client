@@ -1,5 +1,3 @@
-import { getSession } from "@/lib/auth-client";
-
 export interface IUser {
   _id: string;
   name: string;
@@ -11,42 +9,18 @@ export interface IUser {
   updatedAt: string;
 }
 
+const defaultHeaders: Record<string, string> = {
+  "Content-Type": "application/json",
+};
+
 class UserApi {
-  private async getAuthHeaders(): Promise<Record<string, string>> {
-    try {
-      const session = await getSession();
-
-      if (session && typeof session === "object" && "user" in session) {
-        const user = (session as { user: { id: string; email?: string } }).user;
-        if (user?.id) {
-          return {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.id}`,
-            "X-User-Id": user.id,
-            "X-User-Email": user.email || "",
-          };
-        }
-      }
-
-      return {
-        "Content-Type": "application/json",
-      };
-    } catch (error) {
-      console.warn("Failed to get session for auth headers:", error);
-      return {
-        "Content-Type": "application/json",
-      };
-    }
-  }
-
   async getUserById(userId: string): Promise<IUser> {
-    const authHeaders = await this.getAuthHeaders();
-
     const url = `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`;
 
     const response = await fetch(url, {
       method: "GET",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -60,13 +34,12 @@ class UserApi {
   }
 
   async getUserByEmail(email: string): Promise<IUser> {
-    const authHeaders = await this.getAuthHeaders();
-
     const url = `${process.env.NEXT_PUBLIC_API_URL}/users/email/${email}`;
 
     const response = await fetch(url, {
       method: "GET",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -101,15 +74,14 @@ class UserApi {
   }
 
   async deleteUser(userId: string): Promise<void> {
-    const authHeaders = await this.getAuthHeaders();
-
     const url = `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`;
 
     console.log("➡️  [User API] DELETE deleteUser:", { url, userId });
 
     const response = await fetch(url, {
       method: "DELETE",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
     });
 
     if (!response.ok) {

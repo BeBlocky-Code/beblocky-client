@@ -1,7 +1,5 @@
-import { userApi } from "./user";
+import { assignRole } from "@/lib/auth-client";
 import { studentApi } from "./student";
-import { parentApi } from "./parent";
-import { toast } from "sonner";
 
 export interface RoleConversionResult {
   success: boolean;
@@ -10,67 +8,37 @@ export interface RoleConversionResult {
 }
 
 /**
- * Handles the conversion of a user from student role to parent role
- * This function:
- * 1. Updates the user role from "student" to "parent"
- * 2. Finds and deletes the existing student instance
- * 3. Creates a new parent instance
+ * Converts from student to parent: deletes student record in API, then assigns parent role
+ * in auth-service (which creates the parent record in beblocky-api).
  */
 export async function convertStudentToParent(
   userId: string
 ): Promise<RoleConversionResult> {
-  console.log(
-    "🔄 [Role Conversion] Starting student to parent conversion for userId:",
-    userId
-  );
-
   try {
-    // Step 1: Update user role from "student" to "parent"
-    console.log("🔄 [Role Conversion] Step 1: Updating user role to parent");
-    await userApi.updateUser(userId, { role: "parent" });
-    console.log("✅ [Role Conversion] User role updated successfully");
-
-    // Step 2: Find the existing student instance
-    console.log(
-      "🔄 [Role Conversion] Step 2: Finding existing student instance"
-    );
     let studentInstance;
     try {
       studentInstance = await studentApi.getStudentByUserId(userId);
-      console.log(
-        "✅ [Role Conversion] Found student instance:",
-        studentInstance._id
-      );
-    } catch (error) {
-      console.warn(
-        "⚠️ [Role Conversion] No student instance found, proceeding with parent creation"
-      );
-      // If no student instance exists, we can proceed directly to parent creation
+    } catch {
+      // No student instance, proceed to assign parent role
     }
 
-    // Step 3: Delete the student instance if it exists
-    if (studentInstance) {
-      console.log("🔄 [Role Conversion] Step 3: Deleting student instance");
+    if (studentInstance?._id) {
       await studentApi.deleteStudent(studentInstance._id);
-      console.log("✅ [Role Conversion] Student instance deleted successfully");
     }
 
-    // Step 4: Create parent instance
-    console.log("🔄 [Role Conversion] Step 4: Creating parent instance");
-    const parentInstance = await parentApi.createParentFromUser(userId);
-    console.log(
-      "✅ [Role Conversion] Parent instance created successfully:",
-      parentInstance._id
-    );
+    const { error } = await assignRole("parent");
+    if (error) {
+      return {
+        success: false,
+        message: error.message ?? "Failed to assign parent role",
+      };
+    }
 
-    const result: RoleConversionResult = {
+    return {
       success: true,
       message: "Successfully converted from student to parent role",
-      parentId: parentInstance._id,
+      parentId: undefined,
     };
-
-    console.log("🎉 [Role Conversion] Conversion completed successfully");
-    return result;
   } catch (error) {
     console.error("❌ [Role Conversion] Conversion failed:", error);
 
@@ -102,47 +70,34 @@ export async function convertStudentToParent(
 }
 
 /**
- * Handles the complete sign-up flow for parent role
- * This ensures proper role conversion if the user was initially created as a student
+ * Handles parent sign-up. Pass currentRole from session (e.g. session.user.roles?.[0]).
+ * If already parent, assigns role (idempotent). If student, converts then assigns parent role.
  */
 export async function handleParentSignUp(
-  userId: string
+  userId: string,
+  currentRole?: string
 ): Promise<RoleConversionResult> {
-  console.log("🎯 [Parent SignUp] Handling parent sign-up for userId:", userId);
-
   try {
-    // First, check the current user role
-    const user = await userApi.getUserById(userId);
-    console.log("🎯 [Parent SignUp] Current user role:", user.role);
+    const role = (currentRole ?? "").toLowerCase();
 
-    if (user.role === "parent") {
-      // User is already a parent, just create the parent instance
-      console.log(
-        "🎯 [Parent SignUp] User is already parent role, creating parent instance"
-      );
-      const parentInstance = await parentApi.createParentFromUser(userId);
-
-      return {
-        success: true,
-        message: "Parent profile created successfully",
-        parentId: parentInstance._id,
-      };
-    } else if (user.role === "student") {
-      // User is a student, need to convert to parent
-      console.log(
-        "🎯 [Parent SignUp] User is student role, converting to parent"
-      );
-      return await convertStudentToParent(userId);
-    } else {
-      // Unknown role
-      console.error("🎯 [Parent SignUp] Unknown user role:", user.role);
-      return {
-        success: false,
-        message: "Invalid user role. Please contact support.",
-      };
+    if (role === "parent") {
+      const { error } = await assignRole("parent");
+      if (error) {
+        return { success: false, message: error.message ?? "Failed to assign parent role" };
+      }
+      return { success: true, message: "Parent profile ready", parentId: undefined };
     }
+
+    if (role === "student") {
+      return await convertStudentToParent(userId);
+    }
+
+    return {
+      success: false,
+      message: "Invalid user role. Please contact support.",
+    };
   } catch (error) {
-    console.error("❌ [Parent SignUp] Failed to handle parent sign-up:", error);
+    console.error("Parent sign-up failed:", error);
     return {
       success: false,
       message: "Failed to set up parent account. Please try again.",
