@@ -10,6 +10,8 @@ const AUTH_APP_URL =
   process.env.NEXT_PUBLIC_AUTH_APP_URL ?? "http://localhost:3000";
 const AUTH_SERVICE_URL =
   process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ?? "http://localhost:8080";
+/** Production app URL for callback after auth (e.g. https://code.beblocky.com). If set, used instead of request.url so redirect back goes to the correct host. */
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 
 const publicPaths = ["/sign-in", "/sign-up", "/reset-password", "/maintenance"];
 const publicPathPatterns = [
@@ -18,6 +20,15 @@ const publicPathPatterns = [
   /^\/reset-password/,
   /^\/maintenance/,
 ];
+
+function getCallbackUrl(request: NextRequest): string {
+  if (APP_URL) {
+    const base = APP_URL.replace(/\/$/, "");
+    const path = request.nextUrl.pathname + request.nextUrl.search;
+    return path ? `${base}${path.startsWith("/") ? path : `/${path}`}` : base + "/";
+  }
+  return request.url;
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -48,7 +59,8 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!sessionToken && !isPublicPath) {
-    const authUrl = `${AUTH_APP_URL.replace(/\/$/, "")}?callbackUrl=${encodeURIComponent(request.url)}&origin=client`;
+    const callbackUrl = getCallbackUrl(request);
+    const authUrl = `${AUTH_APP_URL.replace(/\/$/, "")}?callbackUrl=${encodeURIComponent(callbackUrl)}&origin=client`;
     return NextResponse.redirect(authUrl);
   }
 
@@ -64,13 +76,15 @@ export async function middleware(request: NextRequest) {
         headers: { Cookie: cookieHeader },
       });
       if (res.status === 401) {
-        const authUrl = `${AUTH_APP_URL.replace(/\/$/, "")}?callbackUrl=${encodeURIComponent(request.url)}&origin=client`;
+        const callbackUrl = getCallbackUrl(request);
+        const authUrl = `${AUTH_APP_URL.replace(/\/$/, "")}?callbackUrl=${encodeURIComponent(callbackUrl)}&origin=client`;
         return NextResponse.redirect(authUrl);
       }
       if (res.status === 200) {
         const data = (await res.json()) as { complete?: boolean };
         if (data.complete === false) {
-          const onboardingUrl = `${AUTH_APP_URL.replace(/\/$/, "")}/onboarding?callbackUrl=${encodeURIComponent(request.url)}&origin=client`;
+          const callbackUrl = getCallbackUrl(request);
+          const onboardingUrl = `${AUTH_APP_URL.replace(/\/$/, "")}/onboarding?callbackUrl=${encodeURIComponent(callbackUrl)}&origin=client`;
           return NextResponse.redirect(onboardingUrl);
         }
       }
