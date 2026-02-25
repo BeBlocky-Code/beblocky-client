@@ -29,7 +29,6 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { CourseStatus } from "@/types/course";
 import { lessonApi } from "@/lib/api/lesson";
 import { canAccessCourse } from "@/lib/utils/subscription-hierarchy";
-import { userApi } from "@/lib/api/user";
 import { studentApi } from "@/lib/api/student";
 import { progressApi } from "@/lib/api/progress";
 import { courseApi } from "@/lib/api/course";
@@ -196,35 +195,22 @@ export default function CoursesPage() {
     }
   }, [coursesByPlan]);
 
-  // Fetch user role
+  // Use session for role; resolve student id for enrollment checks
   useEffect(() => {
-    const fetchUserRole = async () => {
-      if (!session?.user?.id) return;
+    if (!session?.user?.id) return;
 
-      try {
-        const userData = await userApi.getUserById(session.user.id);
-        setUserRole(userData.role || "student");
-        // Resolve student id for enrollment checks (only for students)
-        if (userData.role === "student") {
-          try {
-            const student = await studentApi.getStudentByUserId(
-              session.user.id
-            );
-            setStudentId(student._id);
-          } catch {
-            setStudentId(null);
-          }
-        } else {
-          setStudentId(null);
-        }
-      } catch (error) {
-        console.error("Failed to fetch user role:", error);
-        setUserRole("student");
-      }
-    };
+    const role = session.user.roles?.[0] ?? "student";
+    setUserRole(role);
 
-    fetchUserRole();
-  }, [session?.user?.id]);
+    if (role === "student") {
+      studentApi
+        .getStudentByUserId(session.user.id)
+        .then((student) => setStudentId(student._id))
+        .catch(() => setStudentId(null));
+    } else {
+      setStudentId(null);
+    }
+  }, [session?.user?.id, session?.user?.roles]);
 
   // Fetch lesson data for all courses
   useEffect(() => {
