@@ -28,12 +28,13 @@ export function useUserProfile() {
       setError(null);
 
       try {
+        if (!session?.user) return;
         // TODO: Replace with actual API call to fetch user profile
         // For now, return a mock profile
         const mockProfile: UserProfile = {
           id: session.user.id,
-          email: session.user.email,
-          name: session.user.name,
+          email: session.user.email ?? "",
+          name: session.user.name ?? "",
           role: "parent" as UserRole, // Default role
           image: session.user.image || undefined,
           subscription: "Free",

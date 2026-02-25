@@ -32,12 +32,14 @@ export default function ProgressPage() {
   const { toast } = useToast();
 
   const loadProgressData = useCallback(async () => {
+    const userId = session?.user?.id;
+    if (!userId) return;
     try {
       setLoading(true);
       setError(null);
 
       // First get the parent data to get the actual parent ID
-      const parentData = await parentApi.getParentByUserId(session!.user.id);
+      const parentData = await parentApi.getParentByUserId(userId);
       const data = await progressApi.getParentProgressSummary(parentData._id);
       setChildrenProgress(data);
     } catch (error: unknown) {

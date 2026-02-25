@@ -125,11 +125,11 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
                 <Avatar className="h-12 w-12 ring-2 ring-primary/20 hover:ring-primary/30 transition-all duration-200 hover:scale-105">
                   <AvatarImage src={user.image || undefined} alt={user.name} />
                   <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-semibold shadow-lg text-lg">
-                    {user.name
+                    {(user.name ?? "")
                       .split(" ")
                       .map((n) => n[0])
                       .join("")
-                      .toUpperCase()}
+                      .toUpperCase() || (user.email?.[0] ?? "?").toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 z-10">
@@ -173,11 +173,11 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
                   alt={user.name}
                 />
                 <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white shadow-md text-base">
-                  {user.name
+                  {(user.name ?? "")
                     .split(" ")
                     .map((n) => n[0])
                     .join("")
-                    .toUpperCase()}
+                    .toUpperCase() || (user.email?.[0] ?? "?").toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">

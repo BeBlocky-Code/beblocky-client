@@ -1,3 +1,5 @@
+import { getSession } from "@/lib/auth-client";
+
 export interface IUser {
   _id: string;
   name: string;
@@ -14,6 +16,14 @@ const defaultHeaders: Record<string, string> = {
 };
 
 class UserApi {
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    const { data: session } = await getSession();
+    const headers = { ...defaultHeaders };
+    if (session?.token) {
+      headers["Authorization"] = `Bearer ${session.token}`;
+    }
+    return headers;
+  }
   async getUserById(userId: string): Promise<IUser> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`;
 
