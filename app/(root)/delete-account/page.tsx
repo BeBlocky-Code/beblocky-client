@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, signOut } from "@/lib/auth-client";
-import { userApi } from "@/lib/api/user";
 import { studentApi } from "@/lib/api/student";
 import { parentApi } from "@/lib/api/parent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -106,11 +105,10 @@ export default function DeleteAccountPage() {
     setIsDeleting(true);
 
     try {
-      // Get user data to determine role
-      const userData = await userApi.getUserById(session.user.id);
+      const role = session.user.roles?.[0];
 
-      // Delete role-specific profile first
-      if (userData.role === "student") {
+      // Delete role-specific profile in beblocky-api
+      if (role === "student") {
         try {
           const student = await studentApi.getStudentByUserId(session.user.id);
           if (student?._id) {
@@ -119,7 +117,7 @@ export default function DeleteAccountPage() {
         } catch (error) {
           console.warn("No student profile to delete or deletion failed:", error);
         }
-      } else if (userData.role === "parent") {
+      } else if (role === "parent") {
         try {
           const parent = await parentApi.getParentByUserId(session.user.id);
           if (parent?._id) {
@@ -130,12 +128,10 @@ export default function DeleteAccountPage() {
         }
       }
 
-      // Delete the user account
-      await userApi.deleteUser(session.user.id);
+      // Account record lives in auth-service; no user document in beblocky-api.
+      // For full account deletion, auth-service would need a delete-account endpoint.
+      toast.success("Your profile data has been removed. You have been signed out.");
 
-      toast.success("Your account has been permanently deleted");
-
-      // Sign out and redirect
       await signOut();
       router.push("/sign-in");
     } catch (error) {

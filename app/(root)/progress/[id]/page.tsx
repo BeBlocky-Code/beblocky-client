@@ -12,9 +12,9 @@ import {
   TrendingUp,
   BookOpen,
 } from "lucide-react";
+import { useSession } from "@/lib/auth-client";
 import { studentApi } from "@/lib/api/student";
 import { progressApi } from "@/lib/api/progress";
-import { userApi } from "@/lib/api/user";
 import { useToast } from "@/hooks/use-toast";
 import type { IStudent } from "@/types/student";
 import type { IStudentResponse } from "@/lib/api/student";
@@ -39,6 +39,7 @@ interface ProgressData {
 
 export default function StudentProgressPage() {
   const params = useParams();
+  const { data: session } = useSession();
   const { toast } = useToast();
   const router = useRouter();
   const [student, setStudent] = useState<IStudentResponse | null>(null);
@@ -69,16 +70,13 @@ export default function StudentProgressPage() {
 
         setStudent(studentData);
 
-        // Fetch user data to get name and email
-        try {
-          const userInfo = await userApi.getUserById(studentData.userId);
+        if (session?.user?.id && studentData.userId === session.user.id) {
           setUserData({
-            name: userInfo.name,
-            email: userInfo.email,
+            name: session.user.name ?? "Student",
+            email: session.user.email ?? "",
           });
-        } catch (error) {
-          console.error("Failed to fetch user data:", error);
-          setUserData({ name: "Unknown Student", email: "" });
+        } else {
+          setUserData({ name: "Student", email: "" });
         }
 
         setProgress(progressData as any);
@@ -92,7 +90,7 @@ export default function StudentProgressPage() {
         setLoading(false);
       }
     },
-    [toast]
+    [toast, session?.user?.id, session?.user?.name, session?.user?.email]
   );
 
   useEffect(() => {

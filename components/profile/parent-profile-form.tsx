@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { User, Users, Phone, MapPin, Heart } from "lucide-react";
 import type { IUser } from "@/lib/api/user";
 import type { IParent } from "@/lib/api/parent";
-import { userApi } from "@/lib/api/user";
+import { updateAccount } from "@/lib/auth-client";
 import { parentApi } from "@/lib/api/parent";
 import { useEffect } from "react";
 
@@ -74,11 +74,15 @@ export function ParentProfileForm({ userData }: ParentProfileFormProps) {
     setUserLoading(true);
 
     try {
-      await userApi.updateUser(userData._id, userForm);
-      toast.success("User information updated successfully!");
+      const { error } = await updateAccount({ name: userForm.name });
+      if (error) {
+        toast.error(error.message ?? "Failed to update profile");
+        return;
+      }
+      toast.success("Profile updated successfully!");
     } catch (error) {
-      console.error("Failed to update user:", error);
-      toast.error("Failed to update user information");
+      console.error("Failed to update profile:", error);
+      toast.error("Failed to update profile");
     } finally {
       setUserLoading(false);
     }

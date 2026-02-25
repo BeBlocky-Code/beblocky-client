@@ -18,7 +18,6 @@ import {
 import { useState, useEffect } from "react";
 import { childrenApi } from "@/lib/api/children";
 import { courseApi } from "@/lib/api/course";
-import { userApi } from "@/lib/api/user";
 import { studentApi } from "@/lib/api/student";
 import { progressApi } from "@/lib/api/progress";
 import { parentApi } from "@/lib/api/parent";
@@ -34,7 +33,6 @@ import type { IStudent } from "@/types/student";
 import type { IParent } from "@/types/parent";
 import type { ICourse } from "@/types/course";
 import { RelationshipType } from "@/types/parent";
-import type { IUser } from "@/lib/api/user";
 import type { IParent as IApiParent } from "@/lib/api/parent";
 
 export default function DashboardPage() {
@@ -46,7 +44,6 @@ export default function DashboardPage() {
   const [courses, setCourses] = useState<ICourse[]>([]);
   const [studentStats, setStudentStats] = useState<IStudentStats | null>(null);
   const [parentStats, setParentStats] = useState<IParentStats | null>(null);
-  const [userData, setUserData] = useState<IUser | null>(null);
   const [parentData, setParentData] = useState<IApiParent | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<
@@ -62,22 +59,8 @@ export default function DashboardPage() {
       try {
         setLoading(true);
 
-        // First, fetch user data to get the role
-        console.log(
-          "🎯 [DashboardPage] Fetching user data for ID:",
-          session.user.id
-        );
-        const userDataResponse = await userApi.getUserById(session.user.id);
-        setUserData(userDataResponse);
-
-        console.log("🎯 [DashboardPage] User data fetched:", userDataResponse);
-        console.log("🎯 [DashboardPage] User role:", userDataResponse.role);
-
-        // Determine role from fetched user data
-        const userRole = userDataResponse.role || "student";
+        const userRole = session.user.roles?.[0] ?? "student";
         const isParentUser = userRole === "parent";
-
-        console.log("🎯 [DashboardPage] Determined role:", userRole);
 
         if (isParentUser) {
           // Load parent data
@@ -179,7 +162,7 @@ export default function DashboardPage() {
           // Fetch student by userId to derive real stats
           try {
             const student = await studentApi.getStudentByUserId(
-              userDataResponse._id
+              session.user.id
             );
             const totalCourses = coursesData.length;
             const activeCourses = coursesData.filter(
@@ -253,15 +236,11 @@ export default function DashboardPage() {
     );
   }
 
+  const userRole = session?.user?.roles?.[0] ?? "student";
+
   // Get dashboard content based on role
   const getDashboardContent = () => {
-    if (!userData) {
-      console.log("🎯 [DashboardPage] No user data available, showing loading");
-      return null;
-    }
-
-    const userRole = userData.role || "student";
-    console.log("🎯 [DashboardPage] Rendering dashboard for role:", userRole);
+    if (!session?.user) return null;
 
     if (userRole === "student" && studentStats && session?.user) {
       return (
@@ -359,7 +338,7 @@ export default function DashboardPage() {
   const getHeaderContent = () => {
     const userName = session?.user?.name || "User";
 
-    if (!userData) {
+    if (!session?.user) {
       return {
         title: "Dashboard",
         description: `Welcome back, ${userName}!`,
@@ -367,8 +346,6 @@ export default function DashboardPage() {
         stats: [],
       };
     }
-
-    const userRole = userData.role || "student";
 
     if (userRole === "student" && studentStats) {
       return {
@@ -459,7 +436,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               )}
-              {userData?.role === "student" && (
+              {userRole === "student" && (
                 <Button
                   className="gap-2"
                   onClick={() =>
@@ -473,7 +450,7 @@ export default function DashboardPage() {
                 </Button>
               )}
 
-              {userData?.role === "parent" && (
+              {userRole === "parent" && (
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <div className="flex gap-2">
                     <Button

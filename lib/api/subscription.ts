@@ -17,19 +17,25 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 async function simpleFetch<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
+  token?: string
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
   console.log("🌐 [Subscription API] Making request to:", url);
 
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...options?.headers,
+  };
+  if (token) {
+    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+  }
+
   try {
     const response = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
       ...options,
+      headers,
     });
 
     console.log("🌐 [Subscription API] Response status:", response.status);
@@ -52,10 +58,11 @@ async function simpleFetch<T>(
 export class SubscriptionApi {
   private static async request<T>(
     endpoint: string,
-    options?: RequestInit
+    options?: RequestInit,
+    token?: string
   ): Promise<ApiResponse<T>> {
     try {
-      const data = await simpleFetch<ApiResponse<T>>(endpoint, options);
+      const data = await simpleFetch<ApiResponse<T>>(endpoint, options, token);
 
       // If the response is already an array, wrap it in the expected format
       if (Array.isArray(data)) {
@@ -104,11 +111,14 @@ export class SubscriptionApi {
 
   // GET /subscriptions/user/:userId - Get user's subscriptions
   static async getUserSubscriptions(
-    userId: string
+    userId: string,
+    token?: string
   ): Promise<ApiResponse<ISubscription[]>> {
-    return this.request<ISubscription[]>(`/subscriptions/user/${userId}`, {
-      method: "GET",
-    });
+    return this.request<ISubscription[]>(
+      `/subscriptions/user/${userId}`,
+      { method: "GET" },
+      token
+    );
   }
 
   // PATCH /subscriptions/:id - Update subscription
@@ -186,8 +196,11 @@ export const subscriptionApi = {
     return response.data;
   },
 
-  async getUserSubscriptions(userId: string): Promise<ISubscription[]> {
-    const response = await SubscriptionApi.getUserSubscriptions(userId);
+  async getUserSubscriptions(
+    userId: string,
+    token?: string
+  ): Promise<ISubscription[]> {
+    const response = await SubscriptionApi.getUserSubscriptions(userId, token);
     return response.data;
   },
 
@@ -231,9 +244,11 @@ export const subscriptionApi = {
   },
 
   // Helper method to get user's active subscription
-  async getUserActiveSubscription(userId: string): Promise<ISubscription[]> {
-    // Get all user subscriptions and filter for active ones
-    const userSubscriptions = await this.getUserSubscriptions(userId);
+  async getUserActiveSubscription(
+    userId: string,
+    token?: string
+  ): Promise<ISubscription[]> {
+    const userSubscriptions = await this.getUserSubscriptions(userId, token);
     return userSubscriptions.filter(
       (sub) => sub.status === SubscriptionStatus.ACTIVE
     );

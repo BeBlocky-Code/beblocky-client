@@ -1,6 +1,7 @@
-import { useSession } from "@/lib/auth-client";
 import type { IStudent } from "@/types/student";
 import type { IAddChildDto } from "./children";
+
+const defaultHeaders = { "Content-Type": "application/json" };
 
 export interface CreateParentFromUserDto {
   userId: string;
@@ -24,51 +25,13 @@ export interface IParent {
 }
 
 class ParentApi {
-  private async getAuthHeaders(): Promise<Record<string, string>> {
-    try {
-      const session = await import("@/lib/auth-client").then((m) =>
-        m.getSession()
-      );
-
-      if (session && typeof session === "object" && "user" in session) {
-        const user = (session as { user: { id: string; email?: string } }).user;
-        if (user?.id) {
-          const headers = {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.id}`,
-            "X-User-Id": user.id,
-            "X-User-Email": user.email || "",
-          } as Record<string, string>;
-          console.log("🪪 [Parent API] Using auth headers for user:", user.id);
-          return headers;
-        }
-      }
-
-      return {
-        "Content-Type": "application/json",
-      };
-    } catch (error) {
-      console.warn("Failed to get session for auth headers:", error);
-      return {
-        "Content-Type": "application/json",
-      };
-    }
-  }
-
   async createParentFromUser(userId: string): Promise<IParent> {
-    const authHeaders = await this.getAuthHeaders();
-
     const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/from-user`;
-
-    console.log("➡️  [Parent API] POST createParentFromUser:", {
-      url,
-      body: { userId },
-      hasAuth: !!authHeaders.Authorization,
-    });
 
     const response = await fetch(url, {
       method: "POST",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
       body: JSON.stringify({ userId }),
     });
 
@@ -86,13 +49,12 @@ class ParentApi {
   }
 
   async getParent(parentId: string): Promise<IParent> {
-    const authHeaders = await this.getAuthHeaders();
-
     const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}`;
 
     const response = await fetch(url, {
       method: "GET",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -106,13 +68,12 @@ class ParentApi {
   }
 
   async getParentByUserId(userId: string): Promise<IParent> {
-    const authHeaders = await this.getAuthHeaders();
-
     const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/user/${userId}`;
 
     const response = await fetch(url, {
       method: "GET",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -127,13 +88,13 @@ class ParentApi {
 
   // NEW: GET /parents/:parentId/children - Get children of a parent
   async getChildrenByParent(parentId: string): Promise<IStudent[]> {
-    const authHeaders = await this.getAuthHeaders();
 
     const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}/children`;
 
     const response = await fetch(url, {
       method: "GET",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -148,13 +109,13 @@ class ParentApi {
 
   // NEW: GET /parents/:parentId/with-children - Get parent with populated children
   async getParentWithChildren(parentId: string): Promise<any> {
-    const authHeaders = await this.getAuthHeaders();
 
     const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}/with-children`;
 
     const response = await fetch(url, {
       method: "GET",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -172,7 +133,6 @@ class ParentApi {
     parentId: string,
     childData: IAddChildDto
   ): Promise<IStudent> {
-    const authHeaders = await this.getAuthHeaders();
 
     const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}/children`;
 
@@ -180,12 +140,13 @@ class ParentApi {
       url,
       parentId,
       payload: childData,
-      hasAuth: !!authHeaders.Authorization,
+      hasAuth: true,
     });
 
     const response = await fetch(url, {
       method: "POST",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
       body: JSON.stringify(childData),
     });
 
@@ -207,13 +168,13 @@ class ParentApi {
     parentId: string,
     parentData: Partial<IParent>
   ): Promise<IParent> {
-    const authHeaders = await this.getAuthHeaders();
 
     const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}`;
 
     const response = await fetch(url, {
       method: "PATCH",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
       body: JSON.stringify(parentData),
     });
 
@@ -229,7 +190,6 @@ class ParentApi {
 
   // DELETE /parents/:parentId - Delete parent profile
   async deleteParent(parentId: string): Promise<void> {
-    const authHeaders = await this.getAuthHeaders();
 
     const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}`;
 
@@ -237,7 +197,8 @@ class ParentApi {
 
     const response = await fetch(url, {
       method: "DELETE",
-      headers: authHeaders,
+      headers: defaultHeaders,
+      credentials: "include",
     });
 
     if (!response.ok) {

@@ -21,7 +21,10 @@ export function useSubscription() {
 
     try {
       const activeSubscriptions =
-        await subscriptionApi.getUserActiveSubscription(session.user.id);
+        await subscriptionApi.getUserActiveSubscription(
+          session.user.id,
+          session.token
+        );
 
       // Get the first active subscription (or null if none)
       const activeSubscription =

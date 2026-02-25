@@ -22,8 +22,6 @@ import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSession } from "@/lib/auth-client";
 import { useState, useEffect } from "react";
-import { userApi } from "@/lib/api/user";
-import type { IUser } from "@/lib/api/user";
 import Logo from "@/lib/images/logo.png";
 import IconLogo from "@/lib/images/icon-logo.png";
 import { ContactFormDialog } from "@/components/dialogs/contact-form-dialog";
@@ -56,9 +54,10 @@ export function AppSidebar({ items }: Props) {
   const path = usePathname();
   const { data: session } = useSession();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [userData, setUserData] = useState<IUser | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+
+  const role = session?.user?.roles?.[0] ?? "student";
 
   // Check if device is mobile
   useEffect(() => {
@@ -78,27 +77,6 @@ export function AppSidebar({ items }: Props) {
       setIsCollapsed(true);
     }
   }, [isMobile]);
-
-  // Fetch user data to get the actual role
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!session?.user?.id) {
-        return;
-      }
-
-      try {
-        const userDataResponse = await userApi.getUserById(session.user.id);
-        setUserData(userDataResponse);
-      } catch (error) {
-        console.error("Failed to fetch user data for sidebar:", error);
-      }
-    };
-
-    fetchUserData();
-  }, [session?.user?.id]);
-
-  // Get role from fetched user data
-  const role = userData?.role || "student";
 
   // Helper to check active link
   const checkActive = (item: SidebarNavItem) => {

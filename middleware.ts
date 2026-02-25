@@ -6,73 +6,82 @@ import {
   isUserAgentAllowed,
 } from "@/lib/config/maintenance";
 
-// Add paths that should be accessible without authentication
-const publicPaths = ["/sign-in", "/sign-up", "/reset-password", "/maintenance"];
+const AUTH_APP_URL =
+  process.env.NEXT_PUBLIC_AUTH_APP_URL ?? "http://localhost:3000";
+const AUTH_SERVICE_URL =
+  process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ?? "http://localhost:8080";
 
-// Add regex patterns for Better Auth callback URLs
+const publicPaths = ["/sign-in", "/sign-up", "/reset-password", "/maintenance"];
 const publicPathPatterns = [
   /^\/sign-in/,
   /^\/sign-up/,
   /^\/reset-password/,
   /^\/maintenance/,
-  /^\/api\/auth\/reset-password\/[^?]+/, // Better Auth reset password callback
-  /^\/api\/auth\/[^/]+\/[^?]+/, // General Better Auth callbacks
 ];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if the path is public using both exact matches and regex patterns
   const isPublicPath =
     publicPaths.some((path) => pathname.startsWith(path)) ||
     publicPathPatterns.some((pattern) => pattern.test(pathname));
 
-  // Check for better-auth session token - check multiple possible cookie names for deployed environments
   const sessionToken =
-    request.cookies.get("better-auth.session_token")?.value ||
-    request.cookies.get("__Secure-better-auth.session_token")?.value ||
-    request.cookies.get("__Host-better-auth.session_token")?.value ||
-    request.cookies.get("authjs.session-token")?.value ||
-    request.cookies.get("__Secure-authjs.session-token")?.value;
+    request.cookies.get("session")?.value ||
+    request.cookies.get("__Secure-session")?.value ||
+    request.cookies.get("__Host-session")?.value;
 
-  // Maintenance mode check
   if (isMaintenanceModeEnabled()) {
-    // Allow access to maintenance page itself
     if (pathname === "/maintenance") {
       return NextResponse.next();
     }
-
-    // Get client IP and user agent for bypass checks
     const clientIP =
       request.headers.get("x-forwarded-for") ||
       request.headers.get("x-real-ip") ||
       "unknown";
     const userAgent = request.headers.get("user-agent") || "";
-
-    // Check if client is allowed to bypass maintenance mode
     const isAllowedIP = isIPAllowed(clientIP);
     const isAllowedUserAgent = isUserAgentAllowed(userAgent);
-
-    // If not allowed to bypass, redirect to maintenance page
     if (!isAllowedIP && !isAllowedUserAgent) {
       return NextResponse.redirect(new URL("/maintenance", request.url));
     }
   }
 
-  // If not logged in and trying to access protected page (including root "/")
   if (!sessionToken && !isPublicPath) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+    const authUrl = `${AUTH_APP_URL.replace(/\/$/, "")}?callbackUrl=${encodeURIComponent(request.url)}&origin=client`;
+    return NextResponse.redirect(authUrl);
   }
 
-  // If already logged in and accessing login/signup, redirect to home page
-  if (sessionToken && isPublicPath) {
+  if (sessionToken && isPublicPath && (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up"))) {
     return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  if (sessionToken && !isPublicPath) {
+    try {
+      const base = AUTH_SERVICE_URL.replace(/\/$/, "");
+      const cookieHeader = request.headers.get("cookie") ?? "";
+      const res = await fetch(`${base}/api/v1/account/complete`, {
+        headers: { Cookie: cookieHeader },
+      });
+      if (res.status === 401) {
+        const authUrl = `${AUTH_APP_URL.replace(/\/$/, "")}?callbackUrl=${encodeURIComponent(request.url)}&origin=client`;
+        return NextResponse.redirect(authUrl);
+      }
+      if (res.status === 200) {
+        const data = (await res.json()) as { complete?: boolean };
+        if (data.complete === false) {
+          const onboardingUrl = `${AUTH_APP_URL.replace(/\/$/, "")}/onboarding?callbackUrl=${encodeURIComponent(request.url)}&origin=client`;
+          return NextResponse.redirect(onboardingUrl);
+        }
+      }
+    } catch {
+      // Allow through if auth-service is unreachable to avoid locking users out
+    }
   }
 
   return NextResponse.next();
 }
 
-// Configure which paths the middleware should run on
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
