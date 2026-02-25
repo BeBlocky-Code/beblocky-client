@@ -19,7 +19,6 @@ import { StudentCard } from "@/components/shared/student-card";
 // Import the AddChildDialog component at the top
 import { AddChildDialog } from "@/components/children/add-child-dialog";
 import { studentApi } from "@/lib/api/student";
-import { userApi } from "@/lib/api/user";
 
 export function ParentDashboard({
   parent,
@@ -56,17 +55,8 @@ export function ParentDashboard({
           continue;
         }
         const student = await studentApi.getStudent(studentId as string);
-        let name: string | undefined;
-        let email: string | undefined;
-        if (student.userId) {
-          try {
-            const user = await userApi.getUserById(student.userId);
-            name = user.name;
-            email = user.email;
-          } catch (e) {
-            // ignore missing user
-          }
-        }
+        const name = (student as unknown as { name?: string }).name ?? (raw as UIStudent).name;
+        const email = (raw as UIStudent).email;
         enriched.push({
           ...(raw as Partial<UIStudent>),
           ...(student as unknown as Partial<UIStudent>),

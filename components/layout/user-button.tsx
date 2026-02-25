@@ -17,8 +17,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { userApi } from "@/lib/api/user";
-import type { IUser } from "@/lib/api/user";
 import { ProfileDialog } from "@/components/profile/profile-dialog";
 import { useSubscription } from "@/hooks/use-subscription";
 
@@ -28,28 +26,10 @@ interface UserButtonProps {
 
 export function UserButton({ isCollapsed = false }: UserButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [userData, setUserData] = useState<IUser | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const { data: session, isPending } = useSession();
   const { subscription } = useSubscription();
   const router = useRouter();
-
-  // Fetch user data to get the actual role
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!session?.user?.id) {
-        return;
-      }
-      try {
-        const userDataResponse = await userApi.getUserById(session.user.id);
-        setUserData(userDataResponse);
-        console.log("🎯 [UserButton] User data fetched:", userDataResponse);
-      } catch (error) {
-        console.error("Failed to fetch user data for user button:", error);
-      }
-    };
-    fetchUserData();
-  }, [session?.user?.id]);
 
   const handleSignOut = async () => {
     try {
@@ -87,8 +67,7 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
   }
 
   const user = session.user;
-  // Get role from fetched user data instead of session
-  const userRole = userData?.role || "user";
+  const userRole = user.roles?.[0] ?? "user";
 
   // Get subscription info from actual subscription data
   const getSubscriptionInfo = () => {
