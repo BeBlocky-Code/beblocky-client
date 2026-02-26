@@ -4,9 +4,10 @@
  */
 
 const AUTH_SERVICE_URL =
-  typeof window !== "undefined"
-    ? (process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ?? "http://localhost:8080")
-    : process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ?? "http://localhost:8080";
+  process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ??
+  (process.env.NODE_ENV === "production"
+    ? "https://auth-service.beblocky.com"
+    : "http://localhost:8080");
 const AUTH_BASE = `${AUTH_SERVICE_URL.replace(/\/$/, "")}/api/v1`;
 
 export type SessionUser = {

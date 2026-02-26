@@ -9,7 +9,10 @@ import {
 const AUTH_APP_URL =
   process.env.NEXT_PUBLIC_AUTH_APP_URL ?? "http://localhost:3000";
 const AUTH_SERVICE_URL =
-  process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ?? "http://localhost:8080";
+  process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ??
+  (process.env.NODE_ENV === "production"
+    ? "https://auth-service.beblocky.com"
+    : "http://localhost:8080");
 /** Production app URL for callback after auth (e.g. https://code.beblocky.com). If set, used instead of request.url so redirect back goes to the correct host. */
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 
