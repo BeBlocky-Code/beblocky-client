@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import type { IUser } from "@/lib/api/user";
 import type { IStudentResponse } from "@/lib/api/student";
-import { updateAccount } from "@/lib/auth-client";
+import { updateAccount, useSession } from "@/lib/auth-client";
 import { studentApi } from "@/lib/api/student";
 import { useEffect } from "react";
 
@@ -34,6 +34,7 @@ interface StudentProfileFormProps {
 }
 
 export function StudentProfileForm({ userData }: StudentProfileFormProps) {
+  const { refetch: refetchSession } = useSession();
   const [userLoading, setUserLoading] = useState(false);
   const [studentLoading, setStudentLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -89,6 +90,7 @@ export function StudentProfileForm({ userData }: StudentProfileFormProps) {
         toast.error(error.message ?? "Failed to update profile");
         return;
       }
+      await refetchSession();
       toast.success("Profile updated successfully!");
     } catch (error) {
       console.error("Failed to update profile:", error);

@@ -7,7 +7,10 @@ import {
 } from "@/lib/config/maintenance";
 
 const AUTH_APP_URL =
-  process.env.NEXT_PUBLIC_AUTH_APP_URL ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_AUTH_APP_URL ??
+  (process.env.NODE_ENV === "production"
+    ? "https://auth.beblocky.com"
+    : "http://localhost:3000");
 const AUTH_SERVICE_URL =
   process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ??
   (process.env.NODE_ENV === "production"

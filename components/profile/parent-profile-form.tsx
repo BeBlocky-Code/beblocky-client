@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { User, Users, Phone, MapPin, Heart } from "lucide-react";
 import type { IUser } from "@/lib/api/user";
 import type { IParent } from "@/lib/api/parent";
-import { updateAccount } from "@/lib/auth-client";
+import { updateAccount, useSession } from "@/lib/auth-client";
 import { parentApi } from "@/lib/api/parent";
 import { useEffect } from "react";
 
@@ -26,6 +26,7 @@ interface ParentProfileFormProps {
 }
 
 export function ParentProfileForm({ userData }: ParentProfileFormProps) {
+  const { refetch: refetchSession } = useSession();
   const [userLoading, setUserLoading] = useState(false);
   const [parentLoading, setParentLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -79,6 +80,7 @@ export function ParentProfileForm({ userData }: ParentProfileFormProps) {
         toast.error(error.message ?? "Failed to update profile");
         return;
       }
+      await refetchSession();
       toast.success("Profile updated successfully!");
     } catch (error) {
       console.error("Failed to update profile:", error);
