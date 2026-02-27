@@ -111,32 +111,6 @@ class EmailService {
   }
 
   /**
-   * Send password reset email
-   */
-  async sendPasswordResetEmail(
-    userEmail: string,
-    userName: string,
-    resetLink: string
-  ): Promise<boolean> {
-    try {
-      // TODO: Implement password reset email sending
-      console.log("📧 [Email Service] Sending password reset email:", {
-        to: userEmail,
-        userName,
-        resetLink,
-      });
-
-      return true;
-    } catch (error) {
-      console.error(
-        "❌ [Email Service] Failed to send password reset email:",
-        error
-      );
-      return false;
-    }
-  }
-
-  /**
    * Send email verification email
    */
   async sendEmailVerification(
@@ -208,12 +182,6 @@ export const sendContactFormConfirmation = (
     messagePreview,
     userName
   );
-
-export const sendPasswordResetEmail = (
-  userEmail: string,
-  userName: string,
-  resetLink: string
-) => defaultEmailService.sendPasswordResetEmail(userEmail, userName, resetLink);
 
 export const sendEmailVerification = (
   userEmail: string,

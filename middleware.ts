@@ -19,11 +19,10 @@ const AUTH_SERVICE_URL =
 /** Production app URL for callback after auth (e.g. https://code.beblocky.com). If set, used instead of request.url so redirect back goes to the correct host. */
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 
-const publicPaths = ["/sign-in", "/sign-up", "/reset-password", "/maintenance"];
+const publicPaths = ["/sign-in", "/sign-up", "/maintenance"];
 const publicPathPatterns = [
   /^\/sign-in/,
   /^\/sign-up/,
-  /^\/reset-password/,
   /^\/maintenance/,
 ];
 

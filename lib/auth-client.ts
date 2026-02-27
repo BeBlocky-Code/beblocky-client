@@ -95,13 +95,3 @@ export async function assignRole(role: string): Promise<{ data?: null; error?: {
 }
 
 export { useSession } from "./use-session";
-
-export function forgetPassword(_: { email: string; redirectTo?: string }): Promise<{ data: unknown; error: unknown }> {
-  return Promise.resolve({ data: null, error: { message: "Use the auth app to reset your password." } });
-}
-
-export const forgotPassword = forgetPassword;
-
-export function resetPassword(_: { token: string; newPassword: string }): Promise<{ data: unknown; error: unknown }> {
-  return Promise.resolve({ data: null, error: { message: "Use the auth app to reset your password." } });
-}
