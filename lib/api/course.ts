@@ -95,10 +95,24 @@ export class CourseApi {
   }
 
   // GET /courses/:id - Get single course
-  static async getCourseById(id: string): Promise<ApiResponse<ICourse>> {
-    return this.request<ICourse>(`/courses/${id}`, {
-      method: "GET",
-    }); // Course details might be public
+  static async getCourseById(id: string): Promise<ICourse> {
+    // For historical reasons, the courses API may return either:
+    // 1) A bare course object, or
+    // 2) { data: course, success, message }
+    const data = await simpleFetch<ICourse | ApiResponse<ICourse>>(
+      `/courses/${id}`,
+      {
+        method: "GET",
+        // Course detail usually requires session; include cookies
+        credentials: "include",
+      }
+    );
+
+    if (data && typeof data === "object" && "data" in data) {
+      return (data as ApiResponse<ICourse>).data;
+    }
+
+    return data as ICourse;
   }
 
   // POST /courses - Create new course
@@ -237,8 +251,8 @@ export const courseApi = {
   },
 
   async fetchCourseById(id: string): Promise<ICourse> {
-    const response = await CourseApi.getCourseById(id);
-    return response.data;
+    const course = await CourseApi.getCourseById(id);
+    return course;
   },
 
   async createCourse(courseData: ICreateCourseDto): Promise<ICourse> {
