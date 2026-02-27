@@ -16,6 +16,7 @@ import {
   CourseResultsCount,
   CourseLoadingState,
 } from "@/components/courses";
+import { BundlesShowcase } from "@/components/courses/bundles-showcase";
 import { CourseDetailsDialog } from "@/components/dialogs/course-detail-dialog";
 import { EnrollmentDialog } from "@/components/dialogs/enrollment-dialog";
 import type { ICourse } from "@/types/course";
@@ -351,6 +352,8 @@ export default function CoursesPage() {
             loading={loading}
             error={error}
           />
+
+          <BundlesShowcase />
 
           {/* Courses by Plan */}
           <div className="space-y-6 sm:space-y-8">

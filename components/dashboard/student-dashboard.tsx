@@ -26,6 +26,7 @@ import { CourseStatus } from "@/types/course";
 import { progressApi } from "@/lib/api/progress";
 import { studentApi } from "@/lib/api/student";
 import { courseApi } from "@/lib/api/course";
+import { HourOfCodeShowcase } from "@/components/progress/hour-of-code-showcase";
 import { useSession } from "@/lib/auth-client";
 import { encryptEmail } from "@/lib/utils";
 import { useState, useEffect, useMemo } from "react";
@@ -272,6 +273,9 @@ export function StudentDashboard({
                 </div>
               </CardContent>
             </Card>
+
+            {/* Hour of Code */}
+            <HourOfCodeShowcase />
 
             {/* Recent Activity */}
             <Card className="shadow-lg">
