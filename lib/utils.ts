@@ -85,3 +85,48 @@ export function decryptEmail(encrypted: string): string {
     return "guest";
   }
 }
+
+const COURSE_ID_SALT = "beblocky_2024";
+
+const IDE_BASE_URL =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_IDE_URL) ||
+  "https://ide.beblocky.com";
+
+/**
+ * Build IDE learn URL for a course (uses NEXT_PUBLIC_IDE_URL from env).
+ */
+export function getIdeLearnUrl(courseId: string): string {
+  return `${IDE_BASE_URL}/courses/${encryptCourseId(courseId)}/learn`;
+}
+
+/**
+ * Encrypt courseId for IDE URL (same algorithm as encryptEmail: salt + reverse + base64 + URL-safe).
+ * Use for redirects to IDE /courses/:encrypted/learn.
+ */
+export function encryptCourseId(courseId: string): string {
+  if (!courseId) return "";
+
+  const salted = courseId + COURSE_ID_SALT;
+  const reversed = salted.split("").reverse().join("");
+  const encoded = btoa(reversed);
+  return encoded.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
+/**
+ * Decrypt courseId (mirrors IDE decryptCourseId). Same algorithm: restore base64, reverse, remove salt.
+ */
+export function decryptCourseId(encrypted: string): string {
+  if (!encrypted) return "";
+
+  try {
+    let restored = encrypted.replace(/-/g, "+").replace(/_/g, "/");
+    while (restored.length % 4) {
+      restored += "=";
+    }
+    const decoded = atob(restored);
+    const reversed = decoded.split("").reverse().join("");
+    return reversed.replace(COURSE_ID_SALT, "");
+  } catch {
+    return "";
+  }
+}
