@@ -50,8 +50,7 @@ export function EnrollmentDialog({
         .getStudentCourseProgressSilently(student._id, course._id)
         .catch(() => null);
       if (existing) {
-        const courseUrl = `https://ide.beblocky.com/courses/${encryptCourseId(course._id)}/learn`;
-        window.location.href = courseUrl;
+        window.location.href = getIdeLearnUrl(course._id);
         onClose();
         return;
       }
