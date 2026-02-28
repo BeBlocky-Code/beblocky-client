@@ -16,7 +16,7 @@ import { studentApi } from "@/lib/api/student";
 import { progressApi } from "@/lib/api/progress";
 import { courseApi } from "@/lib/api/course";
 import { toast } from "sonner";
-import { encryptEmail } from "@/lib/utils";
+import { getIdeLearnUrl } from "@/lib/utils";
 
 interface EnrollmentDialogProps {
   course: ICourse | null;
@@ -50,11 +50,8 @@ export function EnrollmentDialog({
         .getStudentCourseProgressSilently(student._id, course._id)
         .catch(() => null);
       if (existing) {
-        if (session?.user?.email) {
-          const encryptedEmail = encryptEmail(session.user.email);
-          const courseUrl = `https://ide.beblocky.com/courses/${course._id}/learn/user/${encryptedEmail}`;
-          window.location.href = courseUrl;
-        }
+        const courseUrl = `https://ide.beblocky.com/courses/${encryptCourseId(course._id)}/learn`;
+        window.location.href = courseUrl;
         onClose();
         return;
       }
@@ -79,11 +76,7 @@ export function EnrollmentDialog({
       onClose();
 
       // Navigate to IDE
-      if (session?.user?.email) {
-        const encryptedEmail = encryptEmail(session.user.email);
-        const courseUrl = `https://ide.beblocky.com/courses/${course._id}/learn/user/${encryptedEmail}`;
-        window.location.href = courseUrl;
-      }
+      window.location.href = getIdeLearnUrl(course._id);
     } catch (error) {
       console.error("Failed to enroll in course:", error);
       toast.error("Failed to enroll in course. Please try again.");

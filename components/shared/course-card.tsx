@@ -14,7 +14,7 @@ import {
 import { BookOpen, Star, Clock, Users, Play, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSession } from "@/lib/auth-client";
-import { encryptEmail } from "@/lib/utils";
+import { getIdeLearnUrl } from "@/lib/utils";
 import type { ICourse } from "@/types/course";
 import type { ILesson } from "@/types/lesson";
 import { lessonApi } from "@/lib/api/lesson";
@@ -101,15 +101,9 @@ export function CourseCard({
   }, [course]);
 
   const handleCardClick = () => {
-    if (isEnrolled) {
-      // Navigate to IDE in same tab
-      if (session?.user?.email) {
-        const encryptedEmail = encryptEmail(session.user.email);
-        const courseUrl = `https://ide.beblocky.com/courses/${course._id}/learn/user/${encryptedEmail}`;
-        window.location.href = courseUrl;
-      }
-    } else {
-      // Show enrollment dialog
+    if (isEnrolled && session?.user?.id) {
+      window.location.href = getIdeLearnUrl(course._id);
+    } else if (!isEnrolled) {
       setShowEnrollmentDialog(true);
     }
   };

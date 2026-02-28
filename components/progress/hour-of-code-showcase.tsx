@@ -52,7 +52,7 @@ export function HourOfCodeShowcase() {
           {courseList.map((course) => (
             <Link
               key={course._id}
-              href={`/courses?courseId=${course._id}`}
+              href={`/courses/${course._id}`}
               className="block"
             >
               <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent/50">

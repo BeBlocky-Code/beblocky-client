@@ -28,7 +28,7 @@ import { studentApi } from "@/lib/api/student";
 import { courseApi } from "@/lib/api/course";
 import { HourOfCodeShowcase } from "@/components/progress/hour-of-code-showcase";
 import { useSession } from "@/lib/auth-client";
-import { encryptEmail } from "@/lib/utils";
+import { getIdeLearnUrl } from "@/lib/utils";
 import { useState, useEffect, useMemo } from "react";
 
 export function StudentDashboard({
@@ -300,12 +300,8 @@ export function StudentDashboard({
                       )
                       .map((item, index) => {
                         const handleClick = () => {
-                          if (session?.user?.email && item.course?._id) {
-                            const encryptedEmail = encryptEmail(
-                              session.user.email
-                            );
-                            const courseUrl = `https://ide.beblocky.com/courses/${item.course._id}/learn/user/${encryptedEmail}`;
-                            window.location.href = courseUrl;
+                          if (session?.user?.id && item.course?._id) {
+                            window.location.href = getIdeLearnUrl(item.course._id);
                           }
                         };
 

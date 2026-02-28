@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Star, Clock, Users, Play, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSession } from "@/lib/auth-client";
-import { encryptEmail } from "@/lib/utils";
+import { getIdeLearnUrl } from "@/lib/utils";
 import { LanguageLogo } from "@/components/shared/language-logos";
 import type { ICourse } from "@/types/course";
 
@@ -43,25 +43,19 @@ export function CourseCard({
   const { data: session } = useSession();
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // If enrolled and user is a student, navigate to IDE
-    if (isEnrolled && userType === "student" && session?.user?.email) {
+    if (isEnrolled && userType === "student" && session?.user?.id) {
       e.preventDefault();
       e.stopPropagation();
-      const encryptedEmail = encryptEmail(session.user.email);
-      const courseUrl = `https://ide.beblocky.com/courses/${course._id}/learn/user/${encryptedEmail}`;
-      window.location.href = courseUrl;
+      window.location.href = getIdeLearnUrl(course._id);
     } else {
-      // Otherwise, show course details
       onViewDetails(course);
     }
   };
 
   const handleLearnButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isEnrolled && userType === "student" && session?.user?.email) {
-      const encryptedEmail = encryptEmail(session.user.email);
-      const courseUrl = `https://ide.beblocky.com/courses/${course._id}/learn/user/${encryptedEmail}`;
-      window.location.href = courseUrl;
+    if (isEnrolled && userType === "student" && session?.user?.id) {
+      window.location.href = getIdeLearnUrl(course._id);
     } else {
       onViewDetails(course);
     }

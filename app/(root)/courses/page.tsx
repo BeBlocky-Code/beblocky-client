@@ -34,7 +34,7 @@ import { studentApi } from "@/lib/api/student";
 import { progressApi } from "@/lib/api/progress";
 import { courseApi } from "@/lib/api/course";
 import { toast } from "sonner";
-import { encryptEmail } from "@/lib/utils";
+import { getIdeLearnUrl } from "@/lib/utils";
 
 export default function CoursesPage() {
   const { data: session, isPending: sessionLoading } = useSession();
@@ -282,10 +282,8 @@ export default function CoursesPage() {
   };
 
   const openIdeForCourse = (courseId: string) => {
-    if (!session?.user?.email) return;
-    const encryptedEmail = encryptEmail(session.user.email);
-    const courseUrl = `https://ide.beblocky.com/courses/${courseId}/learn/user/${encryptedEmail}`;
-    window.open(courseUrl, "_blank");
+    if (!session?.user?.id) return;
+    window.open(getIdeLearnUrl(courseId), "_blank");
   };
 
   const handleEnroll = async (courseId: string) => {

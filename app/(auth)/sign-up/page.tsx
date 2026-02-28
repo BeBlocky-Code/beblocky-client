@@ -34,15 +34,15 @@ function SignUpRedirect() {
     window.location.href = `${base}?callbackUrl=${encodeURIComponent(callbackUrl)}&origin=client`;
   }, [callbackPath]);
 
-  return (
+    return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <p className="text-muted-foreground">Redirecting to sign up…</p>
-    </div>
+        </div>
   );
 }
 
 export default function SignUpPage() {
-  return (
+    return (
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center p-4">
