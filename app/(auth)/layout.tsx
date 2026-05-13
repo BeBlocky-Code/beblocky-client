@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
-  title: "Authentication - BeBlocky",
-  description: "Sign in or sign up to your BeBlocky account",
+  title: "Sign in · BeBlocky",
+  description: "Sign in or create a BeBlocky account.",
 };
 
 export default function AuthLayout({

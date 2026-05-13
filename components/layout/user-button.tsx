@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSession, signOut } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { ProfileDialog } from "@/components/profile/profile-dialog";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -33,12 +33,16 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
-      console.log("Signed out successfully");
-      // Redirect to sign-in page after successful sign-out
-      router.push("/sign-in");
+      const res = await fetch("/api/auth/signout", { method: "POST" });
+      const json = (await res.json().catch(() => ({}))) as {
+        redirectUrl?: string;
+      };
+      const redirectUrl = json?.redirectUrl ?? "/sign-in";
+      // Hard navigation ensures httpOnly cookies + in-memory caches are cleared.
+      window.location.href = redirectUrl;
     } catch (error) {
       console.error("Sign out failed:", error);
+      window.location.href = "/sign-in";
     }
   };
 

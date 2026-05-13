@@ -10,9 +10,9 @@ import { GlobalErrorHandler } from "@/components/global-error-handler";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "BeBlocky - Learn Coding for Kids",
+  title: "BeBlocky",
   description:
-    "Interactive coding platform for children to learn programming through fun games and puzzles.",
+    "Browse coding courses for your kids, track their progress, and handle your plan—all in one place.",
 };
 
 export default function RootLayout({
