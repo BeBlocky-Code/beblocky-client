@@ -15,7 +15,11 @@ export interface ApiResponse<T> {
 export interface IAddChildDto {
   email: string;
   grade: number;
-  // Optional demographic fields used during student creation
+  /** When true, creates a new auth account for the child (requires name + password). */
+  createAccount?: boolean;
+  name?: string;
+  password?: string;
+  // Optional demographic fields — skippable to protect conversion
   dateOfBirth?: string; // ISO or yyyy-mm-dd
   gender?: "male" | "female" | "other";
   emergencyContact?: {

@@ -142,7 +142,6 @@ export function GoalsManagement({
                       onSelect={(date) =>
                         date && setNewGoal({ ...newGoal, targetDate: date })
                       }
-                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
