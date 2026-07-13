@@ -1,22 +1,31 @@
 # ============================================
 # Stage 1: Dependencies
 # ============================================
-FROM oven/bun:1 AS deps
+FROM node:22-alpine AS deps
 
 WORKDIR /app
 
+RUN apk add --no-cache libc6-compat
+
+# Enable pnpm via Corepack (version pinned by package.json "packageManager")
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
+
 # Copy package files
-COPY package.json bun.lockb* ./
+COPY package.json pnpm-lock.yaml .npmrc ./
 
 # Install dependencies
-RUN bun install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # ============================================
 # Stage 2: Builder
 # ============================================
-FROM oven/bun:1 AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
+
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
@@ -31,12 +40,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # Build Next.js
-RUN bun run build
+RUN pnpm run build
 
 # ============================================
 # Stage 3: Runner (Production)
 # ============================================
-FROM oven/bun:1-slim AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
@@ -46,17 +55,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Create non-root user for security (using groupadd/useradd for Debian-based images)
-RUN groupadd --system --gid 1001 nodejs && \
-    useradd --system --uid 1001 --gid nodejs nextjs
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 --ingroup nodejs nextjs
 
 # Copy built assets from builder
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-
-# Set correct permissions
-RUN chown -R nextjs:nodejs /app
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Switch to non-root user
 USER nextjs
@@ -65,4 +71,4 @@ USER nextjs
 EXPOSE 3000
 
 # Start the application
-CMD ["bun", "run", "server.js"]
+CMD ["node", "server.js"]
