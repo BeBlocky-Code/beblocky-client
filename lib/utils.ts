@@ -130,3 +130,16 @@ export function decryptCourseId(encrypted: string): string {
     return "";
   }
 }
+
+/** Stored grade value for students past grade 12. */
+export const GRADE_ABOVE = 13;
+
+export function formatGradeLabel(
+  grade?: number | string | null
+): string {
+  if (grade == null || grade === "") return "N/A";
+  const n = typeof grade === "string" ? parseInt(grade, 10) : grade;
+  if (Number.isNaN(n)) return "N/A";
+  if (n >= GRADE_ABOVE) return "Above";
+  return `Grade ${n}`;
+}

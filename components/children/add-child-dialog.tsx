@@ -295,6 +295,7 @@ export function AddChildDialog({
                     Grade {grade}
                   </SelectItem>
                 ))}
+                <SelectItem value="13">Above</SelectItem>
               </SelectContent>
             </Select>
           </div>

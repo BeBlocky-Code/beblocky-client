@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Mail, GraduationCap, User } from "lucide-react";
 import { format } from "date-fns";
+import { formatGradeLabel } from "@/lib/utils";
 import type { IStudentWithUserData } from "@/types/enriched-student";
 
 interface StudentInfoProps {
@@ -65,7 +66,7 @@ export function StudentInfo({ user }: StudentInfoProps) {
           {user.grade && (
             <div className="flex items-center gap-2">
               <GraduationCap className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Grade {user.grade}</span>
+              <span className="text-sm">{formatGradeLabel(user.grade)}</span>
             </div>
           )}
 

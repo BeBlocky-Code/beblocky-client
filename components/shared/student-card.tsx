@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Coins, Target, BookOpen, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { formatGradeLabel } from "@/lib/utils";
 import type { IStudentWithUserData } from "@/types/enriched-student";
 
 interface StudentCardProps {
@@ -29,7 +30,9 @@ export function StudentCard({
             <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
               {student.name?.charAt(0)?.toUpperCase() || "?"}
             </div>
-            <Badge variant="secondary">Grade {student.grade || "N/A"}</Badge>
+            <Badge variant="secondary">
+              {formatGradeLabel(student.grade)}
+            </Badge>
           </div>
           <CardTitle className="text-lg">
             {student.name || "Unknown Student"}
