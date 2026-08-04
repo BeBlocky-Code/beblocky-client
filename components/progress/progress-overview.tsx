@@ -14,6 +14,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatGradeLabel } from "@/lib/utils";
 import type { ICourse } from "@/types/course";
 import type { IStudentWithUserData } from "@/types/enriched-student";
 
@@ -101,8 +102,8 @@ export function ProgressOverview({
                           {child.name || "Unknown Child"}
                         </CardTitle>
                         <p className="text-muted-foreground">
-                          Grade {child.grade} • {courses.length} courses
-                          enrolled
+                          {formatGradeLabel(child.grade)} • {courses.length}{" "}
+                          courses enrolled
                         </p>
                       </div>
                     </div>

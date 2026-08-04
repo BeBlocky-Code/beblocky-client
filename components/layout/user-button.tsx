@@ -28,7 +28,8 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const { data: session, isPending } = useSession();
-  const { subscription } = useSubscription();
+  const { subscription, hasEffectiveEntitlement, getExpiryDate } =
+    useSubscription();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -75,7 +76,7 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
 
   // Get subscription info from actual subscription data
   const getSubscriptionInfo = () => {
-    if (!subscription || subscription.status !== "active") {
+    if (!subscription || !hasEffectiveEntitlement()) {
       return { name: "Free", variant: "outline" as const, icon: null };
     }
 
@@ -106,6 +107,7 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
   };
 
   const subscriptionInfo = getSubscriptionInfo();
+  const expiryDate = getExpiryDate();
 
   return (
     <>
@@ -191,6 +193,16 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
                 </p>
               </div>
             </div>
+            {expiryDate && (
+              <p className="mt-3 text-xs font-normal text-muted-foreground">
+                {subscriptionInfo.name} expires{" "}
+                {expiryDate.toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            )}
           </DropdownMenuLabel>
 
           <DropdownMenuSeparator />

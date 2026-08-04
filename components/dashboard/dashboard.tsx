@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { formatGradeLabel } from "@/lib/utils";
 import type { IDashboardProps } from "@/types/dashboard-simple";
 import type { ICourse } from "@/types/course";
 import type { IStudentWithUserData } from "@/types/enriched-student";
@@ -380,7 +381,9 @@ function StudentCard({ student, index }: { student: IStudentWithUserData; index:
             <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
               {student.name?.charAt(0)?.toUpperCase() || "?"}
             </div>
-            <Badge variant="secondary">Grade {student.grade || "N/A"}</Badge>
+            <Badge variant="secondary">
+              {formatGradeLabel(student.grade)}
+            </Badge>
           </div>
           <CardTitle className="text-lg">{student.name || "Unknown Student"}</CardTitle>
           <p className="text-sm text-muted-foreground">{student.email || "No email"}</p>

@@ -14,6 +14,7 @@ import {
   Target,
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatGradeLabel } from "@/lib/utils";
 import type { ICourse } from "@/types/course";
 import type { IStudentWithUserData } from "@/types/enriched-student";
 
@@ -84,7 +85,8 @@ export function StudentProgressDetail({
                 {student.name || "Unknown Student"}
               </h1>
               <p className="text-muted-foreground">
-                Grade {student.grade} • {courses.length} courses enrolled
+                {formatGradeLabel(student.grade)} • {courses.length} courses
+                enrolled
               </p>
               <div className="flex items-center gap-4 mt-2">
                 <Badge variant="outline" className="capitalize">
