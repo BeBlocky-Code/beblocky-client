@@ -16,20 +16,17 @@ interface CurrencyStudentSelectorProps {
   onCurrencyChange: (value: "USD" | "ETB" | "KES" | "NGN") => void;
   studentCount: number;
   onStudentCountChange: (count: number) => void;
+  isAnnual: boolean;
+  onBillingChange: (isAnnual: boolean) => void;
 }
-
-const currencyRates = {
-  USD: 1,
-  ETB: 160,
-  KES: 129.2,
-  NGN: 1531.87,
-};
 
 export function CurrencyStudentSelector({
   selectedCurrency,
   onCurrencyChange,
   studentCount,
   onStudentCountChange,
+  isAnnual,
+  onBillingChange,
 }: CurrencyStudentSelectorProps) {
   return (
     <motion.div
@@ -38,23 +35,42 @@ export function CurrencyStudentSelector({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
     >
-      {/* Currency Selector */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-medium text-muted-foreground">
-          Currency:
-        </span>
-        <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
-          <SelectTrigger className="w-32">
-            <DollarSign className="h-4 w-4 mr-2" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="USD">USD</SelectItem>
-            <SelectItem value="ETB">ETB</SelectItem>
-            <SelectItem value="KES">KES</SelectItem>
-            <SelectItem value="NGN">NGN</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Billing cycle + currency */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="inline-flex items-center rounded-lg border border-border p-1">
+          <Button
+            variant={isAnnual ? "ghost" : "default"}
+            size="sm"
+            onClick={() => onBillingChange(false)}
+          >
+            Monthly
+          </Button>
+          <Button
+            variant={isAnnual ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onBillingChange(true)}
+          >
+            Annual
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-muted-foreground">
+            Currency:
+          </span>
+          <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
+            <SelectTrigger className="w-32">
+              <DollarSign className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="USD">USD</SelectItem>
+              <SelectItem value="ETB">ETB</SelectItem>
+              <SelectItem value="KES">KES</SelectItem>
+              <SelectItem value="NGN">NGN</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Student Counter */}

@@ -22,11 +22,7 @@ import {
   type ArifPayPaymentData,
 } from "@/components/payment/payment-method-selector";
 import { useToast } from "@/hooks/use-toast";
-import {
-  StripePlan,
-  StripeBillingCycle,
-  getStripePriceId as getStripePriceIdTyped,
-} from "@/types/stripe-pricing";
+import { BillingCycle, SubscriptionPlan } from "@/types/subscription";
 import { CurrencyStudentSelector } from "@/components/upgrade/currency-student-selector";
 import { parentApi } from "@/lib/api/parent";
 import { childrenApi } from "@/lib/api/children";
@@ -87,19 +83,7 @@ export default function UpgradeStarterPage() {
   const [loadingChildren, setLoadingChildren] = useState(false);
 
   const { toast } = useToast();
-  const {
-    loading: paymentLoading,
-    createArifPayPayment,
-    createStripePayment,
-  } = usePayment({
-    onSuccess: (response: any) => {
-      // Redirect to payment URL
-      if (response?.paymentUrl) {
-        window.location.href = response.paymentUrl;
-      } else if (response?.url) {
-        window.location.href = response.url;
-      }
-    },
+  const { loading: paymentLoading, startCheckout } = usePayment({
     onError: (error) => {
       toast({
         title: "Payment Error",
@@ -109,7 +93,7 @@ export default function UpgradeStarterPage() {
     },
   });
 
-  const isAnnual = false; // For this page, we'll default to monthly pricing for simplicity
+  const [isAnnual, setIsAnnual] = useState(false);
 
   // Load children when session is available
   useEffect(() => {
@@ -165,14 +149,6 @@ export default function UpgradeStarterPage() {
     return isAnnual ? "/year" : "/month";
   };
 
-  const getStripePriceId = (planId: string, isAnnual: boolean): string => {
-    const plan = planId.toUpperCase() as StripePlan;
-    const billingCycle = isAnnual
-      ? StripeBillingCycle.ANNUAL
-      : StripeBillingCycle.MONTHLY;
-    return getStripePriceIdTyped(plan, billingCycle);
-  };
-
   const handleChoosePlan = () => {
     if (!session?.user?.id) {
       toast({
@@ -199,37 +175,13 @@ export default function UpgradeStarterPage() {
     }
 
     try {
-      const planId = "starter";
-      const planName = "Starter Plan";
-      const baseAmount =
-        typeof starterPlan.monthlyPrice === "number"
-          ? starterPlan.monthlyPrice
-          : 6.99;
-
-      // Calculate total amount in USD based on student count (conversion to ETB happens server-side payload)
-      const totalUsdAmount = baseAmount * studentCount;
-
-      if (provider === PaymentProvider.ARIFPAY) {
-        const arifPayData = paymentData as ArifPayPaymentData;
-        await createArifPayPayment(
-          planId,
-          planName,
-          totalUsdAmount,
-          arifPayData.phoneNumber,
-          isAnnual,
-          selectedCurrency
-        );
-      } else if (provider === PaymentProvider.STRIPE) {
-        const stripeData = paymentData as StripePaymentData;
-        const stripePriceId = getStripePriceId(planId, isAnnual);
-        await createStripePayment(
-          planId,
-          planName,
-          stripePriceId,
-          isAnnual,
-          stripeData.phoneNumber
-        );
-      }
+      await startCheckout({
+        planName: SubscriptionPlan.STARTER,
+        billingCycle: isAnnual ? BillingCycle.YEARLY : BillingCycle.MONTHLY,
+        provider,
+        phone: paymentData.phoneNumber || undefined,
+        quantity: studentCount,
+      });
     } catch (error) {
       console.error("Payment initiation failed:", error);
       toast({
@@ -264,6 +216,8 @@ export default function UpgradeStarterPage() {
         onCurrencyChange={setSelectedCurrency}
         studentCount={studentCount}
         onStudentCountChange={setStudentCount}
+        isAnnual={isAnnual}
+        onBillingChange={setIsAnnual}
       />
 
       {/* Starter Plan Card */}

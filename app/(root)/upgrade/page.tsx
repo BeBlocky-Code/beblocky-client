@@ -12,9 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Crown, Sparkles, Smartphone, Globe } from "lucide-react";
+import { CalendarClock, Crown, Sparkles, Smartphone, Globe } from "lucide-react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { usePayment } from "@/hooks/use-payment";
 import { useSubscription } from "@/hooks/use-subscription";
 import {
@@ -24,19 +23,21 @@ import {
   type ArifPayPaymentData,
 } from "@/components/payment/payment-method-selector";
 import { useToast } from "@/hooks/use-toast";
-import { SubscriptionPlan } from "@/types/subscription";
+import { BillingCycle, SubscriptionPlan } from "@/types/subscription";
 import { useSession } from "@/lib/auth-client";
 import { EarlyBirdPromotion } from "@/components/upgrade/early-bird-promotion";
 import { CurrencyStudentSelector } from "@/components/upgrade/currency-student-selector";
 import { PricingPlans } from "@/components/upgrade/pricing-plans";
 import { SchoolPlan } from "@/components/upgrade/school-plan";
 import { FAQSection } from "@/components/upgrade/faq-section";
-import {
-  StripePlan,
-  StripeBillingCycle,
-  getStripePriceId as getStripePriceIdTyped,
-} from "@/types/stripe-pricing";
 import { getCurrentPlanIdFromSubscription } from "@/lib/utils/subscription-hierarchy";
+
+/** UI plan ids map to the catalog plan names the API expects. */
+const PLAN_ID_TO_PLAN_NAME: Record<string, SubscriptionPlan> = {
+  starter: SubscriptionPlan.STARTER,
+  builder: SubscriptionPlan.BUILDER,
+  pro: SubscriptionPlan.PRO_BUNDLE,
+};
 
 interface PricingPlan {
   id: string;
@@ -153,21 +154,10 @@ export default function UpgradePage() {
   const [selectedCurrency, setSelectedCurrency] =
     useState<keyof typeof currencyRates>("USD");
   const [studentCount, setStudentCount] = useState(1);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   const { toast } = useToast();
-  const {
-    loading: paymentLoading,
-    createArifPayPayment,
-    createStripePayment,
-  } = usePayment({
-    onSuccess: (response: any) => {
-      // Redirect to payment URL
-      if (response?.paymentUrl) {
-        window.location.href = response.paymentUrl;
-      } else if (response?.url) {
-        window.location.href = response.url;
-      }
-    },
+  const { loading: paymentLoading, startCheckout } = usePayment({
     onError: (error) => {
       toast({
         title: "Payment Error",
@@ -177,8 +167,9 @@ export default function UpgradePage() {
     },
   });
 
-  const { subscription } = useSubscription();
+  const { subscription, getExpiryDate } = useSubscription();
   const currentPlanId = getCurrentPlanIdFromSubscription(subscription);
+  const expiryDate = getExpiryDate();
 
   const convertPrice = (price: number | string): string => {
     if (typeof price === "string") return price;
@@ -193,16 +184,20 @@ export default function UpgradePage() {
     }
   };
 
+  const getPlanBasePrice = (plan: PricingPlan): number | null => {
+    const price = isAnnual ? plan.annualPrice : plan.monthlyPrice;
+    return typeof price === "number" ? price : null;
+  };
+
   const getPrice = (plan: PricingPlan) => {
-    if (typeof plan.monthlyPrice === "string") return plan.monthlyPrice;
-    const basePrice = plan.monthlyPrice as number;
-    const totalPrice = basePrice * studentCount;
-    return convertPrice(totalPrice);
+    const basePrice = getPlanBasePrice(plan);
+    if (basePrice === null) return String(plan.monthlyPrice);
+    return convertPrice(basePrice * studentCount);
   };
 
   const getPeriod = (plan: PricingPlan) => {
-    if (typeof plan.monthlyPrice === "string") return "";
-    return "/month per student";
+    if (getPlanBasePrice(plan) === null) return "";
+    return isAnnual ? "/year per student" : "/month per student";
   };
 
   const getSavings = (plan: PricingPlan) => {
@@ -226,11 +221,19 @@ export default function UpgradePage() {
     setShowPaymentSelector(true);
   };
 
+  /**
+   * Hands the plan choice to the API. Prices shown here are for display only —
+   * the server re-derives what to charge from its own catalog.
+   */
   const handlePaymentMethodSelect = async (
     provider: PaymentProvider,
     paymentData?: ArifPayPaymentData | StripePaymentData
   ) => {
-    if (!selectedPlan || selectedPlan === "free") {
+    const planName = selectedPlan
+      ? PLAN_ID_TO_PLAN_NAME[selectedPlan]
+      : undefined;
+
+    if (!planName) {
       toast({
         title: "Invalid Plan",
         description: "Please select a valid plan to continue.",
@@ -242,38 +245,14 @@ export default function UpgradePage() {
     setSelectedPaymentProvider(provider);
 
     try {
-      if (provider === "arifpay") {
-        const plan = pricingPlans.find((p) => p.id === selectedPlan)!;
-
-        // For ArifPay, we need to pass the already-converted ETB amount
-        // The createArifPayPayload function will handle the conversion
-        const baseUsdAmount =
-          typeof plan.monthlyPrice === "number"
-            ? plan.monthlyPrice * studentCount
-            : 0;
-
-        await createArifPayPayment(
-          selectedPlan,
-          "Plan",
-          baseUsdAmount, // Pass USD amount, conversion happens in createArifPayPayload
-          paymentData!.phoneNumber,
-          false,
-          selectedCurrency
-        );
-        // Close the dialog after successful payment initiation
-        setShowPaymentSelector(false);
-      } else if (provider === "stripe") {
-        const priceId = getStripePriceId(selectedPlan, false);
-        await createStripePayment(
-          selectedPlan,
-          "Plan",
-          priceId,
-          false,
-          paymentData?.phoneNumber
-        );
-        // Close the dialog after successful payment initiation
-        setShowPaymentSelector(false);
-      }
+      await startCheckout({
+        planName,
+        billingCycle: isAnnual ? BillingCycle.YEARLY : BillingCycle.MONTHLY,
+        provider,
+        phone: paymentData?.phoneNumber || undefined,
+        quantity: studentCount,
+      });
+      setShowPaymentSelector(false);
     } catch (error) {
       console.error("Payment error:", error);
       toast({
@@ -282,26 +261,6 @@ export default function UpgradePage() {
         variant: "destructive",
       });
     }
-  };
-
-  const getStripePriceId = (planId: string, isAnnual: boolean): string => {
-    // Map plan IDs to StripePlan enum values
-    const planMap: Record<string, StripePlan> = {
-      starter: StripePlan.STARTER,
-      builder: StripePlan.BUILDER,
-      pro: StripePlan.PRO_BUNDLE,
-    };
-
-    const stripePlan = planMap[planId];
-    if (!stripePlan) {
-      throw new Error(`Invalid plan ID: ${planId}`);
-    }
-
-    const billingCycle = isAnnual
-      ? StripeBillingCycle.ANNUAL
-      : StripeBillingCycle.MONTHLY;
-
-    return getStripePriceIdTyped(stripePlan, billingCycle);
   };
 
   return (
@@ -322,6 +281,17 @@ export default function UpgradePage() {
             <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-2xl mx-auto">
               Unlock the full potential of coding education for your children
             </p>
+            {expiryDate && (
+              <p className="mt-3 inline-flex items-center gap-2 text-sm text-muted-foreground">
+                <CalendarClock className="h-4 w-4" />
+                Your {subscription?.planName} plan renews on{" "}
+                {expiryDate.toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            )}
           </div>
         </div>
       </motion.div>
@@ -337,6 +307,8 @@ export default function UpgradePage() {
         }
         studentCount={studentCount}
         onStudentCountChange={setStudentCount}
+        isAnnual={isAnnual}
+        onBillingChange={setIsAnnual}
       />
 
       {/* Pricing Plans */}
@@ -365,13 +337,11 @@ export default function UpgradePage() {
               selectedProvider={selectedPaymentProvider || undefined}
               userId={session?.user?.id || ""}
               planName={selectedPlan}
-              billingCycle="monthly"
+              billingCycle={isAnnual ? "yearly" : "monthly"}
               amount={
-                typeof pricingPlans.find((p) => p.id === selectedPlan)
-                  ?.monthlyPrice === "number"
-                  ? (pricingPlans.find((p) => p.id === selectedPlan)
-                      ?.monthlyPrice as number) * studentCount
-                  : 0
+                (getPlanBasePrice(
+                  pricingPlans.find((p) => p.id === selectedPlan)!
+                ) ?? 0) * studentCount
               }
               userEmail={session?.user?.email}
             />
