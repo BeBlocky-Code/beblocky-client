@@ -1,256 +1,163 @@
-import { SubscriptionPlan, SubscriptionStatus } from "@/types/subscription";
+import { SubscriptionStatus } from "@/types/subscription";
 import type {
   ISubscription,
-  ICreateSubscriptionDto,
-  IUpdateSubscriptionDto,
+  BillingCycle,
+  SubscriptionPlan,
 } from "@/types/subscription";
 
-// API Response types
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  success: boolean;
-}
-
-// Simple API client for subscription operations
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-async function simpleFetch<T>(
-  endpoint: string,
-  options?: RequestInit,
-  token?: string
-): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+export type CheckoutProvider = "arifpay" | "stripe";
 
-  console.log("🌐 [Subscription API] Making request to:", url);
-
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...options?.headers,
-  };
-  if (token) {
-    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-  }
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    console.log("🌐 [Subscription API] Response status:", response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ [Subscription API] Error Response:", errorText);
-      throw new Error(`API Error: ${response.status} - ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log("✅ [Subscription API] Success Response:", data);
-    return data;
-  } catch (error) {
-    console.error("❌ [Subscription API] Request failed:", error);
-    throw error;
-  }
+export interface CreateCheckoutInput {
+  planName: SubscriptionPlan;
+  billingCycle: BillingCycle;
+  provider: CheckoutProvider;
+  /** Ethiopian MSISDN (251XXXXXXXXX), required by ArifPay. */
+  phone?: string;
+  quantity?: number;
 }
 
-export class SubscriptionApi {
-  private static async request<T>(
-    endpoint: string,
-    options?: RequestInit,
+export interface CheckoutSession {
+  paymentId: string;
+  checkoutUrl: string;
+  provider: CheckoutProvider;
+  planName: SubscriptionPlan;
+  billingCycle: BillingCycle;
+  amount: number;
+  currency: string;
+}
+
+export interface CheckoutStatus {
+  paymentId: string;
+  provider?: CheckoutProvider;
+  planName?: SubscriptionPlan;
+  billingCycle?: BillingCycle;
+  amount: number;
+  currency?: string;
+  transactionStatus?: string;
+  subscription: ISubscription | null;
+}
+
+export interface PlanCatalogEntry {
+  planName: SubscriptionPlan;
+  planId: string;
+  rank: number;
+  features: string[];
+  selfServe: boolean;
+  maxSeats: number;
+  pricing: Partial<Record<BillingCycle, { usd: number }>>;
+}
+
+async function apiFetch<T>(
+  endpoint: string,
+  options: RequestInit = {},
+  token?: string
+): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((options.headers as Record<string, string>) ?? {}),
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(
+      detail || `Request failed: ${response.status} ${response.statusText}`
+    );
+  }
+
+  const text = await response.text();
+  return (text ? JSON.parse(text) : null) as T;
+}
+
+/**
+ * Subscription API. Entitlement is granted server-side after a verified
+ * payment, so there is deliberately no way to create a paid subscription here.
+ */
+export const subscriptionApi = {
+  /** Opens a gateway session for a plan the server prices itself. */
+  async createCheckout(
+    input: CreateCheckoutInput,
     token?: string
-  ): Promise<ApiResponse<T>> {
-    try {
-      const data = await simpleFetch<ApiResponse<T>>(endpoint, options, token);
+  ): Promise<CheckoutSession> {
+    return apiFetch<CheckoutSession>(
+      "/subscriptions/checkout",
+      { method: "POST", body: JSON.stringify(input) },
+      token
+    );
+  },
 
-      // If the response is already an array, wrap it in the expected format
-      if (Array.isArray(data)) {
-        console.log(
-          "✅ [Subscription API] Wrapping array response in expected format"
-        );
-        return {
-          data: data as T,
-          success: true,
-          message: "Subscriptions fetched successfully",
-        } as ApiResponse<T>;
-      }
-
-      return data;
-    } catch (error) {
-      console.error("❌ [Subscription API] Request failed:", error);
-      throw error;
-    }
-  }
-
-  // POST /subscriptions - Create new subscription
-  static async createSubscription(
-    subscriptionData: ICreateSubscriptionDto
-  ): Promise<ApiResponse<ISubscription>> {
-    return this.request<ISubscription>("/subscriptions", {
-      method: "POST",
-      body: JSON.stringify(subscriptionData),
-    });
-  }
-
-  // GET /subscriptions - Get all subscriptions
-  static async getAllSubscriptions(): Promise<ApiResponse<ISubscription[]>> {
-    return this.request<ISubscription[]>("/subscriptions", {
-      method: "GET",
-    });
-  }
-
-  // GET /subscriptions/:id - Get single subscription
-  static async getSubscriptionById(
-    id: string
-  ): Promise<ApiResponse<ISubscription>> {
-    return this.request<ISubscription>(`/subscriptions/${id}`, {
-      method: "GET",
-    });
-  }
-
-  // GET /subscriptions/user/:userId - Get user's subscriptions
-  static async getUserSubscriptions(
-    userId: string,
+  async getCheckoutStatus(
+    paymentId: string,
     token?: string
-  ): Promise<ApiResponse<ISubscription[]>> {
-    return this.request<ISubscription[]>(
-      `/subscriptions/user/${userId}`,
+  ): Promise<CheckoutStatus> {
+    return apiFetch<CheckoutStatus>(
+      `/subscriptions/checkout/${paymentId}/status`,
       { method: "GET" },
       token
     );
-  }
-
-  // PATCH /subscriptions/:id - Update subscription
-  static async updateSubscription(
-    id: string,
-    subscriptionData: IUpdateSubscriptionDto
-  ): Promise<ApiResponse<ISubscription>> {
-    return this.request<ISubscription>(`/subscriptions/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(subscriptionData),
-    });
-  }
-
-  // DELETE /subscriptions/:id - Delete subscription
-  static async deleteSubscription(id: string): Promise<ApiResponse<void>> {
-    return this.request<void>(`/subscriptions/${id}`, {
-      method: "DELETE",
-    });
-  }
-
-  // GET /subscriptions/active/all - Get all active subscriptions
-  static async getActiveSubscriptions(): Promise<ApiResponse<ISubscription[]>> {
-    return this.request<ISubscription[]>("/subscriptions/active/all", {
-      method: "GET",
-    });
-  }
-
-  // GET /subscriptions/status/:status - Get subscriptions by status
-  static async getSubscriptionsByStatus(
-    status: SubscriptionStatus
-  ): Promise<ApiResponse<ISubscription[]>> {
-    return this.request<ISubscription[]>(`/subscriptions/status/${status}`, {
-      method: "GET",
-    });
-  }
-
-  // GET /subscriptions/plan/:planName - Get subscriptions by plan
-  static async getSubscriptionsByPlan(
-    planName: SubscriptionPlan
-  ): Promise<ApiResponse<ISubscription[]>> {
-    return this.request<ISubscription[]>(`/subscriptions/plan/${planName}`, {
-      method: "GET",
-    });
-  }
-
-  // GET /subscriptions/expiring - Get expiring subscriptions
-  static async getExpiringSubscriptions(
-    days: number = 7
-  ): Promise<ApiResponse<ISubscription[]>> {
-    return this.request<ISubscription[]>(
-      `/subscriptions/expiring?days=${days}`,
-      {
-        method: "GET",
-      }
-    );
-  }
-}
-
-// Instance methods for backward compatibility
-export const subscriptionApi = {
-  async createSubscription(
-    subscriptionData: ICreateSubscriptionDto
-  ): Promise<ISubscription> {
-    const response = await SubscriptionApi.createSubscription(subscriptionData);
-    return response.data;
   },
 
-  async getAllSubscriptions(): Promise<ISubscription[]> {
-    const response = await SubscriptionApi.getAllSubscriptions();
-    return response.data;
-  },
-
-  async getSubscriptionById(id: string): Promise<ISubscription> {
-    const response = await SubscriptionApi.getSubscriptionById(id);
-    return response.data;
-  },
-
-  async getUserSubscriptions(
-    userId: string,
+  /** Asks the server to re-check the gateway when a webhook is running late. */
+  async verifyCheckout(
+    paymentId: string,
     token?: string
-  ): Promise<ISubscription[]> {
-    const response = await SubscriptionApi.getUserSubscriptions(userId, token);
-    return response.data;
-  },
-
-  async updateSubscription(
-    id: string,
-    subscriptionData: IUpdateSubscriptionDto
-  ): Promise<ISubscription> {
-    const response = await SubscriptionApi.updateSubscription(
-      id,
-      subscriptionData
+  ): Promise<CheckoutStatus> {
+    return apiFetch<CheckoutStatus>(
+      `/subscriptions/checkout/${paymentId}/verify`,
+      { method: "POST" },
+      token
     );
-    return response.data;
   },
 
-  async deleteSubscription(id: string): Promise<void> {
-    await SubscriptionApi.deleteSubscription(id);
-  },
-
-  async getActiveSubscriptions(): Promise<ISubscription[]> {
-    const response = await SubscriptionApi.getActiveSubscriptions();
-    return response.data;
-  },
-
-  async getSubscriptionsByStatus(
-    status: SubscriptionStatus
-  ): Promise<ISubscription[]> {
-    const response = await SubscriptionApi.getSubscriptionsByStatus(status);
-    return response.data;
-  },
-
-  async getSubscriptionsByPlan(
-    planName: SubscriptionPlan
-  ): Promise<ISubscription[]> {
-    const response = await SubscriptionApi.getSubscriptionsByPlan(planName);
-    return response.data;
-  },
-
-  async getExpiringSubscriptions(days: number = 7): Promise<ISubscription[]> {
-    const response = await SubscriptionApi.getExpiringSubscriptions(days);
-    return response.data;
-  },
-
-  // Helper method to get user's active subscription
-  async getUserActiveSubscription(
-    userId: string,
-    token?: string
-  ): Promise<ISubscription[]> {
-    const userSubscriptions = await this.getUserSubscriptions(userId, token);
-    return userSubscriptions.filter(
-      (sub) => sub.status === SubscriptionStatus.ACTIVE
+  /** The subscription that actually grants access right now, or null. */
+  async getMySubscription(token?: string): Promise<ISubscription | null> {
+    return apiFetch<ISubscription | null>(
+      "/subscriptions/me",
+      { method: "GET" },
+      token
     );
+  },
+
+  async getMySubscriptionHistory(token?: string): Promise<ISubscription[]> {
+    const result = await apiFetch<ISubscription[] | null>(
+      "/subscriptions/me/all",
+      { method: "GET" },
+      token
+    );
+    return result ?? [];
+  },
+
+  async cancelMySubscription(token?: string): Promise<ISubscription> {
+    return apiFetch<ISubscription>(
+      "/subscriptions/me/cancel",
+      { method: "POST" },
+      token
+    );
+  },
+
+  async getPlans(token?: string): Promise<PlanCatalogEntry[]> {
+    const result = await apiFetch<PlanCatalogEntry[] | null>(
+      "/subscriptions/plans",
+      { method: "GET" },
+      token
+    );
+    return result ?? [];
   },
 };
+
+/** True when the subscription is active and still inside its paid period. */
+export function isEntitlementEffective(
+  subscription?: Pick<ISubscription, "status" | "endDate"> | null
+): boolean {
+  if (!subscription) return false;
+  if (subscription.status !== SubscriptionStatus.ACTIVE) return false;
+  return new Date(subscription.endDate).getTime() > Date.now();
+}

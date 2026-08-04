@@ -60,10 +60,22 @@ export function filterCoursesBySubscription<
  * @returns string - The current plan name
  */
 export function getCurrentPlanName(subscription: any): string {
-  if (!subscription || subscription.status !== "active") {
+  if (!isEffectiveEntitlement(subscription)) {
     return "Free";
   }
   return subscription.planName || "Free";
+}
+
+/**
+ * A plan only grants access while it is active *and* inside its paid period.
+ * Checking the end date here means a missed expiry run cannot leak access.
+ */
+export function isEffectiveEntitlement(
+  subscription?: { status?: string; endDate?: string | Date } | null
+): boolean {
+  if (!subscription || subscription.status !== "active") return false;
+  if (!subscription.endDate) return false;
+  return new Date(subscription.endDate).getTime() > Date.now();
 }
 
 /**
@@ -104,10 +116,12 @@ export function mapPlanNameToId(
 
 // Get current plan ID from subscription object (safe)
 export function getCurrentPlanIdFromSubscription(
-  subscription?: { status?: string; planName?: string } | null
+  subscription?:
+    | { status?: string; planName?: string; endDate?: string | Date }
+    | null
 ): "free" | "starter" | "builder" | "pro" | "organization" {
-  if (!subscription || subscription.status !== "active") return "free";
-  return mapPlanNameToId(subscription.planName);
+  if (!isEffectiveEntitlement(subscription)) return "free";
+  return mapPlanNameToId(subscription?.planName);
 }
 
 // Compare UI plan IDs by rank (returns positive if a > b)

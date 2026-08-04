@@ -1,7 +1,15 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "@/lib/auth-client";
-import { subscriptionApi } from "@/lib/api/subscription";
+import { isEntitlementEffective, subscriptionApi } from "@/lib/api/subscription";
 import type { ISubscription, SubscriptionPlan } from "@/types/subscription";
+
+const PLAN_HIERARCHY: Record<string, number> = {
+  Free: 0,
+  Starter: 1,
+  Builder: 2,
+  "Pro-Bundle": 3,
+  Organization: 4,
+};
 
 export function useSubscription() {
   const { data: session } = useSession();
@@ -9,9 +17,11 @@ export function useSubscription() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch user's active subscription
-  const fetchUserSubscription = async () => {
-    if (!session?.user?.id) {
+  const token = session?.token;
+  const userId = session?.user?.id;
+
+  const fetchUserSubscription = useCallback(async () => {
+    if (!userId) {
       setSubscription(null);
       return;
     }
@@ -20,81 +30,65 @@ export function useSubscription() {
     setError(null);
 
     try {
-      const activeSubscriptions =
-        await subscriptionApi.getUserActiveSubscription(
-          session.user.id,
-          session.token
-        );
-
-      // Get the first active subscription (or null if none)
-      const activeSubscription =
-        Array.isArray(activeSubscriptions) && activeSubscriptions.length > 0
-          ? activeSubscriptions[0]
-          : null;
-
-      setSubscription(activeSubscription);
+      // `/subscriptions/me` already filters on status and endDate server-side.
+      const effective = await subscriptionApi.getMySubscription(token);
+      setSubscription(isEntitlementEffective(effective) ? effective : null);
     } catch (err) {
-      const errorMessage =
+      const message =
         err instanceof Error ? err.message : "Failed to fetch subscription";
-      setError(errorMessage);
+      setError(message);
       console.error("Error fetching subscription:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, userId]);
 
-  // Fetch subscription on mount and when session changes
   useEffect(() => {
     fetchUserSubscription();
-  }, [session?.user?.id]);
+  }, [fetchUserSubscription]);
 
-  // Check if user has active subscription
+  /** Active, paid-for and not past its end date. */
+  const hasEffectiveEntitlement = (): boolean =>
+    isEntitlementEffective(subscription);
+
   const hasActiveSubscription = (planName?: SubscriptionPlan): boolean => {
-    if (!subscription) return false;
-    if (!planName) return subscription.status === "active";
-    return (
-      subscription.status === "active" && subscription.planName === planName
+    if (!hasEffectiveEntitlement()) return false;
+    if (!planName) return true;
+    return subscription?.planName === planName;
+  };
+
+  const hasAnyActiveSubscription = (): boolean => hasEffectiveEntitlement();
+
+  const getCurrentPlan = (): string =>
+    hasEffectiveEntitlement() ? (subscription?.planName ?? "Free") : "Free";
+
+  const isOnFreePlan = (): boolean => getCurrentPlan() === "Free";
+
+  /** Date the current entitlement lapses, or null on Free / no plan. */
+  const getExpiryDate = (): Date | null => {
+    if (!hasEffectiveEntitlement() || !subscription) return null;
+    if (subscription.planName === "Free") return null;
+    return new Date(subscription.endDate);
+  };
+
+  const getDaysRemaining = (): number | null => {
+    const expiry = getExpiryDate();
+    if (!expiry) return null;
+    return Math.max(
+      0,
+      Math.ceil((expiry.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
     );
   };
 
-  // Check if user has any active subscription
-  const hasAnyActiveSubscription = (): boolean => {
-    return subscription?.status === "active";
-  };
-
-  // Get current plan name
-  const getCurrentPlan = (): string => {
-    return subscription?.planName || "Free";
-  };
-
-  // Check if user is on free plan
-  const isOnFreePlan = (): boolean => {
-    return !subscription || subscription.planName === "Free";
-  };
-
-  // Check if user can access feature (based on plan)
   const canAccessFeature = (requiredPlan: SubscriptionPlan): boolean => {
-    if (!subscription) return requiredPlan === "Free";
-
-    const planHierarchy = {
-      Free: 0,
-      Starter: 1,
-      Builder: 2,
-      "Pro-Bundle": 3,
-      Organization: 4,
-    };
-
-    const userPlanLevel = planHierarchy[subscription.planName] || 0;
-    const requiredPlanLevel = planHierarchy[requiredPlan] || 0;
-
-    return (
-      subscription.status === "active" && userPlanLevel >= requiredPlanLevel
-    );
+    const currentLevel = PLAN_HIERARCHY[getCurrentPlan()] ?? 0;
+    const requiredLevel = PLAN_HIERARCHY[requiredPlan] ?? 0;
+    return currentLevel >= requiredLevel;
   };
 
-  // Refresh subscription data
-  const refreshSubscription = () => {
-    fetchUserSubscription();
+  const cancelSubscription = async () => {
+    await subscriptionApi.cancelMySubscription(token);
+    await fetchUserSubscription();
   };
 
   return {
@@ -103,9 +97,13 @@ export function useSubscription() {
     error,
     hasActiveSubscription,
     hasAnyActiveSubscription,
+    hasEffectiveEntitlement,
     getCurrentPlan,
     isOnFreePlan,
+    getExpiryDate,
+    getDaysRemaining,
     canAccessFeature,
-    refreshSubscription,
+    cancelSubscription,
+    refreshSubscription: fetchUserSubscription,
   };
 }

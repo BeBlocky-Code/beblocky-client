@@ -1,6 +1,20 @@
 # Payment Integration System
 
-This document describes the complete payment integration system for BeBlocky, including both ArifPay (local Ethiopian payments) and Stripe (international payments).
+> **Outdated.** The client no longer builds gateway payloads or creates
+> subscriptions. `lib/api/payment.ts` and the `/api/payment/webhook` route were
+> removed; `usePayment` now exposes a single `startCheckout` that calls
+> `POST /subscriptions/checkout`, and the success page polls
+> `GET /subscriptions/checkout/:paymentId/status` until the server confirms the
+> payment. See `beblocky-api/docs/subscription-system.md` for the current flow.
+>
+> Current client surface:
+>
+> - `usePayment().startCheckout({ planName, billingCycle, provider, phone?, quantity? })`
+> - `useSubscription()` — reads `/subscriptions/me`, exposes
+>   `hasEffectiveEntitlement()`, `getExpiryDate()`, `getDaysRemaining()` and
+>   `cancelSubscription()`
+> - Gating uses `isEntitlementEffective` / `isEffectiveEntitlement`, which
+>   require `status === "active"` **and** `endDate > now`
 
 ## Overview
 
