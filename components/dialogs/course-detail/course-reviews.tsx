@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, MessageSquare, Send, Loader2 } from "lucide-react";
@@ -134,178 +133,171 @@ export function CourseReviews({
   };
 
   return (
-    <Card className="p-4">
-      <CardContent className="p-0">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Reviews & Ratings
-          </h3>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowReviews(!showReviews)}
-          >
-            {showReviews ? "Hide" : "Show"} Reviews
-          </Button>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-bold tracking-tight">Reviews & ratings</h3>
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full"
+          onClick={() => setShowReviews(!showReviews)}
+        >
+          {showReviews ? "Hide" : "Show"} reviews
+        </Button>
+      </div>
 
-        {showReviews && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-4"
-          >
-            {/* Rating Stats */}
-            {ratingStats && (
-              <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {ratingStats.averageRating.toFixed(1)}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Average Rating
-                  </div>
+      {showReviews && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
+          {ratingStats && (
+            <div className="grid grid-cols-3 gap-3 rounded-2xl bg-muted/40 p-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">
+                  {ratingStats.averageRating.toFixed(1)}
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">
-                    {ratingStats.totalRatings}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Total Reviews
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">
-                    {ratingStats.userRating ? "✓" : "—"}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Your Rating
-                  </div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                  Average
                 </div>
               </div>
-            )}
-
-            {/* Add Review Form */}
-            {isValidUserId ? (
-              <div className="space-y-3 p-4 border rounded-lg">
-                <h4 className="font-medium">Write a Review</h4>
-                <p className="text-xs text-muted-foreground">
-                  User ID: {userId!.substring(0, 10)}...
-                </p>
-
-                {/* Star Rating */}
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setUserRating(star)}
-                      className="p-1 hover:scale-110 transition-transform"
-                    >
-                      <Star
-                        className={`h-5 w-5 ${
-                          star <= userRating
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    </button>
-                  ))}
-                  <span className="ml-2 text-sm text-muted-foreground">
-                    {userRating > 0
-                      ? `${userRating} star${userRating > 1 ? "s" : ""}`
-                      : "Select rating"}
-                  </span>
+              <div className="text-center">
+                <div className="text-2xl font-bold">
+                  {ratingStats.totalRatings}
                 </div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                  Reviews
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">
+                  {ratingStats.userRating ? "✓" : "—"}
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                  Yours
+                </div>
+              </div>
+            </div>
+          )}
 
-                {/* Review Text */}
-                <Textarea
-                  placeholder="Share your experience with this course..."
-                  value={userReview}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    setUserReview(e.target.value)
-                  }
-                  className="min-h-[80px]"
-                />
+          {isValidUserId ? (
+            <div className="space-y-3 rounded-2xl border border-border/50 p-4">
+              <h4 className="text-sm font-bold tracking-tight">Write a review</h4>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleSubmitReview}
-                    disabled={userRating === 0 || isSubmittingReview}
-                    size="sm"
-                    className="gap-2"
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setUserRating(star)}
+                    className="rounded-md p-1 transition-transform hover:scale-110"
                   >
-                    {isSubmittingReview ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                    {ratingStats?.userRating ? "Update" : "Submit"} Review
-                  </Button>
+                    <Star
+                      className={`h-5 w-5 ${
+                        star <= userRating
+                          ? "fill-primary text-primary"
+                          : "text-muted-foreground/40"
+                      }`}
+                    />
+                  </button>
+                ))}
+                <span className="ml-2 text-sm text-muted-foreground">
+                  {userRating > 0
+                    ? `${userRating} star${userRating > 1 ? "s" : ""}`
+                    : "Select rating"}
+                </span>
+              </div>
 
-                  {ratingStats?.userRating && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDeleteReview}
-                    >
-                      Delete Review
-                    </Button>
+              <Textarea
+                placeholder="Share your experience with this course…"
+                value={userReview}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setUserReview(e.target.value)
+                }
+                className="min-h-[80px] rounded-xl border-border/60 bg-muted/30"
+              />
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSubmitReview}
+                  disabled={userRating === 0 || isSubmittingReview}
+                  size="sm"
+                  className="gap-2 rounded-full"
+                >
+                  {isSubmittingReview ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  {ratingStats?.userRating ? "Update" : "Submit"} review
+                </Button>
+
+                {ratingStats?.userRating && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                    onClick={handleDeleteReview}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Please sign in to write a review
+            </p>
+          )}
+
+          {isLoadingReviews ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : reviews.length > 0 ? (
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold tracking-tight">Recent reviews</h4>
+              {reviews.slice(0, 5).map((review) => (
+                <div
+                  key={review.id}
+                  className="rounded-2xl bg-muted/30 px-4 py-3"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-3 w-3 ${
+                            star <= review.rating
+                              ? "fill-primary text-primary"
+                              : "text-muted-foreground/30"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(review.createdAt)}
+                    </span>
+                  </div>
+                  {review.review && (
+                    <p className="text-sm text-muted-foreground">
+                      {review.review}
+                    </p>
                   )}
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-4 text-muted-foreground">
-                <p>Please sign in to write a review</p>
-              </div>
-            )}
-
-            {/* Reviews List */}
-            {isLoadingReviews ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
-              </div>
-            ) : reviews.length > 0 ? (
-              <div className="space-y-3">
-                <h4 className="font-medium">Recent Reviews</h4>
-                {reviews.slice(0, 5).map((review) => (
-                  <div key={review.id} className="p-3 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`h-3 w-3 ${
-                              star <= review.rating
-                                ? "fill-yellow-400 text-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDate(review.createdAt)}
-                      </span>
-                    </div>
-                    {review.review && (
-                      <p className="text-sm text-muted-foreground">
-                        {review.review}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <MessageSquare className="h-8 w-8 mx-auto mb-2" />
-                <p>No reviews yet. Be the first to review this course!</p>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </CardContent>
-    </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground">
+              <MessageSquare className="mx-auto mb-2 h-8 w-8 opacity-40" />
+              <p className="text-sm">
+                No reviews yet. Be the first to review this course!
+              </p>
+            </div>
+          )}
+        </motion.div>
+      )}
+    </div>
   );
 }

@@ -14,8 +14,11 @@ import { lessonApi } from "@/lib/api/lesson";
 import { progressApi } from "@/lib/api/progress";
 import { studentApi } from "@/lib/api/student";
 import type { ICourse } from "@/types/course";
+import {
+  AppDialogBody,
+  dialogContentWideClass,
+} from "@/components/dialogs/dialog-shell";
 
-// Import modular components
 import { CourseHero } from "./course-detail/course-hero";
 import { CourseStats } from "./course-detail/course-stats";
 import { CourseDetails } from "./course-detail/course-details";
@@ -135,62 +138,59 @@ export function CourseDetailsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
-        <DialogHeader>
-          <DialogTitle className="sr-only">Course Details</DialogTitle>
+      <DialogContent
+        className={`${dialogContentWideClass} max-h-[90vh] overflow-y-auto scrollbar-hide`}
+      >
+        <DialogHeader className="sr-only">
+          <DialogTitle>Course details</DialogTitle>
         </DialogHeader>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          {/* Hero Section */}
-          <CourseHero course={course} />
+        <AppDialogBody className="space-y-6 pt-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            <CourseHero course={course} />
 
-          {/* Course Info */}
-          <div className="space-y-4">
-            <div>
-              <h1 className="text-2xl font-bold mb-2">{course.courseTitle}</h1>
-              <p className="text-muted-foreground">
-                {course.courseDescription}
-              </p>
+            <div className="space-y-4">
+              <div>
+                <h1 className="mb-2 text-2xl font-bold tracking-tight">
+                  {course.courseTitle}
+                </h1>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {course.courseDescription}
+                </p>
+              </div>
+
+              <CourseStats
+                rating={course.rating}
+                totalHours={totalHours}
+                studentsCount={studentsCount}
+                difficulty={difficulty}
+              />
+
+              <CourseDetails course={course} />
+              <CourseProgress progress={course.progress} />
+              <CourseReviews
+                course={course}
+                userId={userId}
+                isValidUserId={isValidUserId}
+              />
             </div>
 
-            {/* Stats Grid */}
-            <CourseStats
-              rating={course.rating}
-              totalHours={totalHours}
-              studentsCount={studentsCount}
-              difficulty={difficulty}
-            />
-
-            {/* Course Details */}
-            <CourseDetails course={course} />
-
-            {/* Progress (if enrolled) */}
-            <CourseProgress progress={course.progress} />
-
-            {/* Reviews Section */}
-            <CourseReviews
+            <CourseActions
               course={course}
-              userId={userId}
-              isValidUserId={isValidUserId}
+              userType={userType}
+              isLoading={isLoading}
+              isEnrolled={isEnrolled}
+              subscription={subscription}
+              onEnroll={onEnroll}
+              onAddToPlan={onAddToPlan}
+              onClose={onClose}
             />
-          </div>
-
-          {/* Action Buttons */}
-          <CourseActions
-            course={course}
-            userType={userType}
-            isLoading={isLoading}
-            isEnrolled={isEnrolled}
-            subscription={subscription}
-            onEnroll={onEnroll}
-            onAddToPlan={onAddToPlan}
-            onClose={onClose}
-          />
-        </motion.div>
+          </motion.div>
+        </AppDialogBody>
       </DialogContent>
     </Dialog>
   );

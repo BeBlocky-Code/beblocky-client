@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Star, Clock, Users, Target } from "lucide-react";
 
 interface CourseStatsProps {
@@ -14,39 +13,27 @@ export function CourseStats({
   studentsCount,
   difficulty,
 }: CourseStatsProps) {
+  const items = [
+    { label: "Rating", value: String(rating), icon: Star },
+    { label: "Duration", value: `${totalHours}h`, icon: Clock },
+    { label: "Students", value: String(studentsCount), icon: Users },
+    { label: "Level", value: difficulty, icon: Target },
+  ];
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Card className="p-3">
-        <CardContent className="p-0 text-center">
-          <Star className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
-          <div className="text-lg font-bold">{rating}</div>
-          <div className="text-xs text-muted-foreground">Rating</div>
-        </CardContent>
-      </Card>
-
-      <Card className="p-3">
-        <CardContent className="p-0 text-center">
-          <Clock className="h-5 w-5 text-blue-500 mx-auto mb-1" />
-          <div className="text-lg font-bold">{totalHours}h</div>
-          <div className="text-xs text-muted-foreground">Duration</div>
-        </CardContent>
-      </Card>
-
-      <Card className="p-3">
-        <CardContent className="p-0 text-center">
-          <Users className="h-5 w-5 text-green-500 mx-auto mb-1" />
-          <div className="text-lg font-bold">{studentsCount}</div>
-          <div className="text-xs text-muted-foreground">Students</div>
-        </CardContent>
-      </Card>
-
-      <Card className="p-3">
-        <CardContent className="p-0 text-center">
-          <Target className="h-5 w-5 text-purple-500 mx-auto mb-1" />
-          <div className="text-lg font-bold">{difficulty}</div>
-          <div className="text-xs text-muted-foreground">Level</div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      {items.map(({ label, value, icon: Icon }) => (
+        <div
+          key={label}
+          className="rounded-2xl bg-muted/40 px-3 py-3 text-center"
+        >
+          <Icon className="mx-auto mb-1.5 h-4 w-4 text-primary" />
+          <div className="text-base font-bold tracking-tight">{value}</div>
+          <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+            {label}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

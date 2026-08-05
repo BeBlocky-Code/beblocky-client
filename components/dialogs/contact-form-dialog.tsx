@@ -1,12 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,24 +13,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import {
   MessageSquare,
   Send,
   Loader2,
   CheckCircle,
-  AlertCircle,
-  Mail,
-  User,
-  FileText,
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
+import {
+  AppDialogBody,
+  AppDialogFooter,
+  AppDialogHeader,
+  dialogContentWideClass,
+  dialogFieldLabelClass,
+  dialogInputClass,
+  dialogPrimaryBtnClass,
+  dialogSecondaryBtnClass,
+  dialogTextareaClass,
+} from "@/components/dialogs/dialog-shell";
 
 interface ContactFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  title?: string;
+  defaultCategory?: ContactCategory;
+  defaultSubject?: string;
 }
 
 type ContactCategory =
@@ -45,7 +49,8 @@ type ContactCategory =
   | "course"
   | "account"
   | "bug"
-  | "feature";
+  | "feature"
+  | "sales";
 
 interface ContactFormData {
   name: string;
@@ -64,6 +69,11 @@ const contactCategories: {
     value: "general",
     label: "General Inquiry",
     description: "General questions about BeBlocky",
+  },
+  {
+    value: "sales",
+    label: "Sales / Schools",
+    description: "School plans, volume licenses, LMS integrations",
   },
   {
     value: "technical",
@@ -93,17 +103,41 @@ const contactCategories: {
   },
 ];
 
-export function ContactFormDialog({ isOpen, onClose }: ContactFormDialogProps) {
+export function ContactFormDialog({
+  isOpen,
+  onClose,
+  title = "Contact Support",
+  defaultCategory = "general",
+  defaultSubject = "",
+}: ContactFormDialogProps) {
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState<ContactFormData>({
     name: session?.user?.name || "",
     email: session?.user?.email || "",
-    category: "general",
-    subject: "",
+    category: defaultCategory,
+    subject: defaultSubject,
     message: "",
   });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setIsSubmitted(false);
+    setFormData((prev) => ({
+      ...prev,
+      name: session?.user?.name || prev.name || "",
+      email: session?.user?.email || prev.email || "",
+      category: defaultCategory,
+      subject: defaultSubject || prev.subject,
+    }));
+  }, [
+    isOpen,
+    session?.user?.name,
+    session?.user?.email,
+    defaultCategory,
+    defaultSubject,
+  ]);
 
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
     setFormData((prev) => ({
@@ -115,7 +149,6 @@ export function ContactFormDialog({ isOpen, onClose }: ContactFormDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation
     if (
       !formData.name.trim() ||
       !formData.email.trim() ||
@@ -126,7 +159,6 @@ export function ContactFormDialog({ isOpen, onClose }: ContactFormDialogProps) {
       return;
     }
 
-    // Improved email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Please enter a valid email address");
@@ -144,42 +176,34 @@ export function ContactFormDialog({ isOpen, onClose }: ContactFormDialogProps) {
         body: JSON.stringify({
           ...formData,
           userId: session?.user?.id,
-          // Derive role safely without relying on TS role property
-          userType: (session?.user as any)?.role || "student",
+          userType:
+            (session?.user as { roles?: string[]; role?: string } | undefined)
+              ?.roles?.[0] ||
+            (session?.user as { role?: string } | undefined)?.role ||
+            "student",
         }),
       });
 
       const responseData = await response.json();
 
       if (!response.ok) {
-        // Handle specific API errors
-        if (responseData.error) {
-          if (responseData.error === "Invalid email format") {
-            toast.error("Please enter a valid email address");
-          } else if (responseData.error === "Missing required fields") {
-            toast.error("Please fill in all required fields");
-          } else {
-            toast.error(responseData.error);
-          }
-        } else {
-          toast.error("Failed to send message. Please try again later.");
-        }
+        toast.error(
+          responseData.error || "Failed to send message. Please try again later."
+        );
         return;
       }
 
       setIsSubmitted(true);
       toast.success("Message sent successfully! We'll get back to you soon.");
 
-      // Reset form
       setFormData({
         name: session?.user?.name || "",
         email: session?.user?.email || "",
-        category: "general",
-        subject: "",
+        category: defaultCategory,
+        subject: defaultSubject,
         message: "",
       });
 
-      // Close dialog after a delay
       setTimeout(() => {
         setIsSubmitted(false);
         onClose();
@@ -201,193 +225,156 @@ export function ContactFormDialog({ isOpen, onClose }: ContactFormDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            Contact Support
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent
+        className={`${dialogContentWideClass} max-h-[90vh] overflow-y-auto scrollbar-hide`}
+      >
+        <AppDialogHeader
+          icon={<MessageSquare className="h-5 w-5" />}
+          title={title}
+          description="Tell us how we can help — we usually reply within 24 hours."
+        />
 
         {isSubmitted ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-12"
-          >
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Message Sent!</h3>
-            <p className="text-muted-foreground">
-              Thank you for reaching out. We'll get back to you within 24 hours.
-            </p>
-          </motion.div>
+          <AppDialogBody>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center py-10 text-center"
+            >
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <CheckCircle className="h-7 w-7" />
+              </div>
+              <h3 className="text-xl font-bold tracking-tight">Message sent</h3>
+              <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                Thanks for reaching out. We&apos;ll get back to you soon.
+              </p>
+            </motion.div>
+          </AppDialogBody>
         ) : (
-          <motion.form
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            onSubmit={handleSubmit}
-            className="space-y-6"
-          >
-            {/* User Info Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Full Name *
-                </Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  placeholder="Enter your full name"
-                  disabled={isSubmitting}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email Address *
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="Enter your email address"
-                  disabled={isSubmitting}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Category Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="category" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Category *
-              </Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) =>
-                  handleInputChange("category", value as ContactCategory)
-                }
-                disabled={isSubmitting}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {contactCategories.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{category.label}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {category.description}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Subject */}
-            <div className="space-y-2">
-              <Label htmlFor="subject" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Subject *
-              </Label>
-              <Input
-                id="subject"
-                value={formData.subject}
-                onChange={(e) => handleInputChange("subject", e.target.value)}
-                placeholder="Brief description of your inquiry"
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-
-            {/* Message */}
-            <div className="space-y-2">
-              <Label htmlFor="message" className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Message *
-              </Label>
-              <Textarea
-                id="message"
-                value={formData.message}
-                onChange={(e) => handleInputChange("message", e.target.value)}
-                placeholder="Please provide detailed information about your inquiry..."
-                className="min-h-[120px] resize-none"
-                disabled={isSubmitting}
-                required
-              />
-              <div className="flex justify-between items-center text-xs text-muted-foreground">
-                <span>
-                  Be as detailed as possible to help us assist you better
-                </span>
-                <span>{formData.message.length}/1000</span>
-              </div>
-            </div>
-
-            {/* Help Text */}
-            <div className="bg-muted/50 p-4 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+          <form onSubmit={handleSubmit}>
+            <AppDialogBody className="space-y-5">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <h4 className="font-medium text-sm">What to expect:</h4>
-                  <ul className="text-xs text-muted-foreground space-y-1">
-                    <li>• We typically respond within 24 hours</li>
-                    <li>
-                      • For urgent technical issues, please include error
-                      messages
-                    </li>
-                    <li>
-                      • For billing issues, please include your transaction ID
-                      if available
-                    </li>
-                    <li>
-                      • You'll receive a confirmation email once we receive your
-                      message
-                    </li>
-                  </ul>
+                  <Label htmlFor="name" className={dialogFieldLabelClass}>
+                    Full name
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    placeholder="Your name"
+                    disabled={isSubmitting}
+                    required
+                    className={dialogInputClass}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email" className={dialogFieldLabelClass}>
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder="you@example.com"
+                    disabled={isSubmitting}
+                    required
+                    className={dialogInputClass}
+                  />
                 </div>
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t">
+              <div className="space-y-2">
+                <Label htmlFor="category" className={dialogFieldLabelClass}>
+                  Category
+                </Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    handleInputChange("category", value as ContactCategory)
+                  }
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger className={`${dialogInputClass} w-full`}>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    {contactCategories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        <span className="font-medium">{category.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subject" className={dialogFieldLabelClass}>
+                  Subject
+                </Label>
+                <Input
+                  id="subject"
+                  value={formData.subject}
+                  onChange={(e) => handleInputChange("subject", e.target.value)}
+                  placeholder="Brief description of your inquiry"
+                  disabled={isSubmitting}
+                  required
+                  className={dialogInputClass}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="message" className={dialogFieldLabelClass}>
+                  Message
+                </Label>
+                <Textarea
+                  id="message"
+                  value={formData.message}
+                  onChange={(e) => handleInputChange("message", e.target.value)}
+                  placeholder="Share the details we need to help you…"
+                  disabled={isSubmitting}
+                  required
+                  maxLength={1000}
+                  className={dialogTextareaClass}
+                />
+                <div className="flex justify-between text-[11px] text-muted-foreground">
+                  <span>Include error messages or transaction IDs when relevant</span>
+                  <span>{formData.message.length}/1000</span>
+                </div>
+              </div>
+            </AppDialogBody>
+
+            <AppDialogFooter>
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="flex-1"
+                className={dialogSecondaryBtnClass}
               >
                 Cancel
               </Button>
-
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 gap-2"
+                className={`${dialogPrimaryBtnClass} gap-2`}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Sending...
+                    Sending…
                   </>
                 ) : (
                   <>
                     <Send className="h-4 w-4" />
-                    Send Message
+                    Send message
                   </>
                 )}
               </Button>
-            </div>
-          </motion.form>
+            </AppDialogFooter>
+          </form>
         )}
       </DialogContent>
     </Dialog>

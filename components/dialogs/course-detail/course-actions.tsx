@@ -2,6 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Play, Plus, CheckCircle } from "lucide-react";
 import { CourseSubscriptionType } from "@/types/course";
 import { canAccessCourse } from "@/lib/utils/subscription-hierarchy";
+import {
+  dialogPrimaryBtnClass,
+  dialogSecondaryBtnClass,
+} from "@/components/dialogs/dialog-shell";
 
 interface CourseActionsProps {
   course: any;
@@ -24,22 +28,17 @@ export function CourseActions({
   onAddToPlan,
   onClose,
 }: CourseActionsProps) {
-  // Check if user has the same course (for parent users)
   const userHasSameCourse =
     course?.progress !== undefined && course?.progress > 0;
 
-  // Determine if Add to Plan should be visible per hierarchy
   const shouldShowAddToPlan = (() => {
     if (!course) return false;
-    // 1) Free plan courses should NOT show add to plan
     if (course.subType === CourseSubscriptionType.FREE) return false;
-    // 2) If user plan already covers this course level, hide
     const userPlan = subscription?.planName || null;
     const covered = canAccessCourse(userPlan as any, course.subType);
     return !covered;
   })();
 
-  // Determine if current user has access to this course level
   const studentHasAccess = (() => {
     if (!course) return false;
     const userPlan = subscription?.planName || null;
@@ -56,11 +55,11 @@ export function CourseActions({
   };
 
   return (
-    <div className="flex gap-3 pt-4 border-t">
+    <div className="flex flex-col-reverse gap-2 border-t border-border/60 bg-muted/20 px-0 pt-4 sm:flex-row">
       <Button
         variant="outline"
         onClick={onClose}
-        className="flex-1 bg-transparent"
+        className={dialogSecondaryBtnClass}
       >
         Close
       </Button>
@@ -70,19 +69,19 @@ export function CourseActions({
           <Button
             onClick={handleAction}
             disabled={isLoading || isEnrolled}
-            className="flex-1 gap-2"
+            className={`${dialogPrimaryBtnClass} gap-2`}
           >
             {isLoading ? (
-              "Enrolling..."
+              "Enrolling…"
             ) : isEnrolled ? (
               <>
                 <CheckCircle className="h-4 w-4" />
-                Already Enrolled
+                Already enrolled
               </>
             ) : (
               <>
                 <Play className="h-4 w-4" />
-                {course.progress ? "Continue Learning" : "Enroll Now"}
+                {course.progress ? "Continue learning" : "Enroll now"}
               </>
             )}
           </Button>
@@ -90,14 +89,14 @@ export function CourseActions({
           <Button
             onClick={() => onAddToPlan?.(course._id)}
             disabled={isLoading}
-            className="flex-1 gap-2"
+            className={`${dialogPrimaryBtnClass} gap-2`}
           >
             {isLoading ? (
-              "Adding..."
+              "Adding…"
             ) : (
               <>
                 <Plus className="h-4 w-4" />
-                Add to Plan
+                Add to plan
               </>
             )}
           </Button>
@@ -106,21 +105,25 @@ export function CourseActions({
         <Button
           onClick={handleAction}
           disabled={isLoading}
-          className="flex-1 gap-2"
+          className={`${dialogPrimaryBtnClass} gap-2`}
         >
           {isLoading ? (
-            "Adding..."
+            "Adding…"
           ) : (
             <>
               <Plus className="h-4 w-4" />
-              Add to Plan
+              Add to plan
             </>
           )}
         </Button>
       ) : (
-        <Button variant="outline" disabled className="flex-1 gap-2">
+        <Button
+          variant="outline"
+          disabled
+          className={`${dialogSecondaryBtnClass} gap-2`}
+        >
           <CheckCircle className="h-4 w-4" />
-          Already in Plan
+          Already in plan
         </Button>
       )}
     </div>

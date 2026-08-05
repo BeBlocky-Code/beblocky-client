@@ -1,6 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Award, Globe, CheckCircle } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { ICourse } from "@/types/course";
 
@@ -25,54 +24,46 @@ export function CourseDetails({ course }: CourseDetailsProps) {
         : "Advanced";
 
   return (
-    <div className="grid md:grid-cols-2 gap-6">
-      <Card className="p-4">
-        <CardContent className="p-0">
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Award className="h-4 w-4" />
-            What You&apos;ll Learn
-          </h3>
-          <ul className="space-y-2">
-            {features.map((feature, index) => (
-              <li key={index} className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                {feature}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+    <div className="grid gap-6 md:grid-cols-2">
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold tracking-tight">What you&apos;ll learn</h3>
+        <ul className="space-y-2.5">
+          {features.map((feature) => (
+            <li key={feature} className="flex items-start gap-2 text-sm">
+              <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span className="text-muted-foreground">{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      <Card className="p-4">
-        <CardContent className="p-0">
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            Course Information
-          </h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Language</span>
-              <Badge variant="outline">{course.courseLanguage}</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">
-                Subscription
-              </span>
-              <Badge variant="secondary">{course.subType}</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Difficulty</span>
-              <span className="text-sm font-medium">{difficulty}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">
-                Last Updated
-              </span>
-              <span className="text-sm">{formatDate(course.updatedAt)}</span>
-            </div>
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold tracking-tight">Course information</h3>
+        <div className="space-y-3 rounded-2xl bg-muted/40 px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm text-muted-foreground">Language</span>
+            <Badge variant="outline" className="rounded-full">
+              {course.courseLanguage}
+            </Badge>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm text-muted-foreground">Subscription</span>
+            <Badge variant="secondary" className="rounded-full">
+              {course.subType}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm text-muted-foreground">Difficulty</span>
+            <span className="text-sm font-semibold">{difficulty}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm text-muted-foreground">Last updated</span>
+            <span className="text-sm font-medium">
+              {formatDate(course.updatedAt)}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
