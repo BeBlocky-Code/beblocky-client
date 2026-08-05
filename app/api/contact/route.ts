@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  sendContactFormNotification,
-  sendContactFormConfirmation,
-} from "@/lib/email-service";
+
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+).replace(/\/$/, "");
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { name, email, category, subject, message, userId, userType } = body;
 
-    // Basic validation
     if (!name || !email || !category || !subject || !message) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -17,7 +16,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
@@ -26,21 +24,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Save contact form submission to database
-    // const contactSubmission = await saveContactSubmission({
-    //   name,
-    //   email,
-    //   category,
-    //   subject,
-    //   message,
-    //   userId,
-    //   userType,
-    //   createdAt: new Date(),
-    // });
-
-    // Send admin notification email
-    const emailSent = await sendContactFormNotification(
-      {
+    const upstream = await fetch(`${API_BASE_URL}/contact`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         name,
         email,
         category,
@@ -48,37 +35,23 @@ export async function POST(request: NextRequest) {
         message,
         userId,
         userType,
-      },
-      "Admin"
-    );
+      }),
+      cache: "no-store",
+    });
 
-    if (!emailSent) {
-      console.warn("⚠️ [Contact API] Failed to send admin notification email");
-    }
+    const data = await upstream.json().catch(() => ({}));
 
-    // Send confirmation email to user
-    const confirmationSent = await sendContactFormConfirmation(
-      email,
-      subject,
-      message.substring(0, 140),
-      name
-    );
-
-    if (!confirmationSent) {
-      console.warn(
-        "⚠️ [Contact API] Failed to send confirmation email to user"
+    if (!upstream.ok) {
+      const messageText =
+        data?.message ||
+        data?.error ||
+        (Array.isArray(data?.message) ? data.message[0] : null) ||
+        "Failed to send message";
+      return NextResponse.json(
+        { error: messageText },
+        { status: upstream.status }
       );
     }
-
-    console.log("Contact form submission received:", {
-      name,
-      email,
-      category,
-      subject,
-      message: message.substring(0, 100) + "...",
-      userId,
-      userType,
-    });
 
     return NextResponse.json(
       {

@@ -3,6 +3,7 @@ import type {
   ICreateStudentDto,
   IUpdateStudentDto,
 } from "@/types/student";
+import { getSession } from "@/lib/auth-client";
 
 // API Response types
 export interface ApiResponse<T> {
@@ -42,16 +43,22 @@ async function simpleFetch<T>(
   options?: RequestInit
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const { data: session } = await getSession();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((options?.headers as Record<string, string>) ?? {}),
+  };
+  if (session?.token && !headers.Authorization) {
+    headers.Authorization = `Bearer ${session.token}`;
+  }
 
   console.log("🌐 [Children API] Making request to:", url);
 
   try {
     const response = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
       ...options,
+      headers,
+      credentials: "include",
     });
 
     console.log("🌐 [Children API] Response status:", response.status);

@@ -17,7 +17,7 @@ import {
   CourseLoadingState,
 } from "@/components/courses";
 import { BundlesShowcase } from "@/components/courses/bundles-showcase";
-import { CourseDetailsDialog } from "@/components/dialogs/course-detail-dialog";
+import { CourseDetailsDialog } from "@/components/dialogs/course-detail";
 import { EnrollmentDialog } from "@/components/dialogs/enrollment-dialog";
 import type { ICourse } from "@/types/course";
 import { CourseSubscriptionType } from "@/types/course";

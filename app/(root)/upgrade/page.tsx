@@ -25,7 +25,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { BillingCycle, SubscriptionPlan } from "@/types/subscription";
 import { useSession } from "@/lib/auth-client";
-import { EarlyBirdPromotion } from "@/components/upgrade/early-bird-promotion";
 import { CurrencyStudentSelector } from "@/components/upgrade/currency-student-selector";
 import { PricingPlans } from "@/components/upgrade/pricing-plans";
 import { SchoolPlan } from "@/components/upgrade/school-plan";
@@ -297,8 +296,7 @@ export default function UpgradePage() {
       </motion.div>
 
       {/* Early Bird Promotion */}
-      <EarlyBirdPromotion />
-
+  
       {/* Currency Toggle and Student Counter */}
       <CurrencyStudentSelector
         selectedCurrency={selectedCurrency}
