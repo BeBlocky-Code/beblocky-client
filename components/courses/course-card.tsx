@@ -74,10 +74,10 @@ export function CourseCard({
       >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between mb-3">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
               <LanguageLogo
                 language={course.courseLanguage}
-                className="text-white"
+                className="text-primary"
                 size={20}
               />
             </div>

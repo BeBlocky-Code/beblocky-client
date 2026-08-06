@@ -405,14 +405,14 @@ export default function DashboardPage() {
       <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <motion.div
-          className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-b border-border rounded-lg p-4 sm:p-6"
+          className="bg-muted/40 border-b border-border rounded-lg p-4 sm:p-6"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div className="flex flex-col gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center gap-2 sm:gap-3">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground flex items-center gap-2 sm:gap-3">
                 {headerContent.icon}
                 {headerContent.title}
               </h1>

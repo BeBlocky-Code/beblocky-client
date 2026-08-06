@@ -14,18 +14,18 @@ export function CourseHeader({
 }: CourseHeaderProps) {
   return (
     <motion.div
-      className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-b border-border rounded-lg p-4 sm:p-6"
+      className="rounded-lg border border-border bg-muted/40 p-4 sm:p-6"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
       <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center gap-2 sm:gap-3">
-            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground sm:gap-3 sm:text-3xl md:text-4xl">
+            <Sparkles className="h-6 w-6 text-primary sm:h-8 sm:w-8" />
             {title}
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-2">
+          <p className="mt-2 text-sm text-muted-foreground sm:text-base">
             {description}
           </p>
         </div>

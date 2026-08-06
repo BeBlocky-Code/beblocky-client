@@ -320,7 +320,7 @@ export function CourseDetailsDialog({
         >
           {/* Hero Section */}
           <div className="relative">
-            <div className="h-32 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 rounded-lg flex items-center justify-center">
+            <div className="h-32 bg-muted rounded-lg flex items-center justify-center">
               <BookOpen className="h-16 w-16 text-primary" />
             </div>
             <Badge

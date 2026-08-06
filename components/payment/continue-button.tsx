@@ -27,7 +27,7 @@ const ContinueButton: React.FC<ContinueButtonProps> = ({
     className="bg-background/95 backdrop-blur-sm pt-4 sm:pt-6 pb-3 sm:pb-4 border-t border-border/50"
   >
     <Button
-      className="w-full sm:w-auto sm:min-w-[200px] h-12 sm:h-14 text-base sm:text-lg font-semibold bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 transition-all duration-300 group shadow-lg"
+      className="w-full sm:w-auto sm:min-w-[200px] h-12 sm:h-14 text-base sm:text-lg font-semibold transition-all duration-300 group"
       size="lg"
       disabled={
         loading ||

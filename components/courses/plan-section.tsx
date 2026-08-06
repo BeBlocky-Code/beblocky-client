@@ -13,7 +13,6 @@ interface PlanConfig {
   name: string;
   description: string;
   icon: React.ReactNode;
-  gradient: string;
   color: string;
   badgeVariant: "default" | "secondary" | "destructive" | "outline";
 }
@@ -60,14 +59,12 @@ export function PlanSection({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
     >
-      <Card
-        className={`bg-gradient-to-r ${config.gradient} border-0 shadow-lg`}
-      >
+      <Card className="border-border shadow-sm">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
-                className={`p-2 rounded-lg bg-white/80 dark:bg-black/20 ${config.color}`}
+                className={`rounded-lg bg-primary/10 p-2 ${config.color}`}
               >
                 {config.icon}
               </div>

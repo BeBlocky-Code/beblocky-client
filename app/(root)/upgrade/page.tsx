@@ -48,7 +48,6 @@ interface PricingPlan {
   features: string[];
   popular?: boolean;
   icon: React.ReactNode;
-  gradient: string;
   note?: string;
 }
 
@@ -67,8 +66,6 @@ const pricingPlans: PricingPlan[] = [
       "Community support",
     ],
     icon: <Sparkles className="h-6 w-6" />,
-    gradient:
-      "from-gray-50 to-gray-100 dark:from-gray-950/50 dark:to-gray-900/50",
   },
   {
     id: "starter",
@@ -85,8 +82,6 @@ const pricingPlans: PricingPlan[] = [
       "Email support",
     ],
     icon: <Smartphone className="h-6 w-6" />,
-    gradient:
-      "from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50",
   },
   {
     id: "builder",
@@ -105,8 +100,6 @@ const pricingPlans: PricingPlan[] = [
     ],
     popular: true,
     icon: <Globe className="h-6 w-6" />,
-    gradient:
-      "from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50",
   },
   {
     id: "pro",
@@ -124,8 +117,6 @@ const pricingPlans: PricingPlan[] = [
       "Premium support",
     ],
     icon: <Crown className="h-6 w-6" />,
-    gradient:
-      "from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50",
   },
 ];
 
@@ -266,14 +257,14 @@ export default function UpgradePage() {
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
       {/* Header */}
       <motion.div
-        className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-b border-border rounded-lg p-4 sm:p-6 mb-6 sm:mb-8"
+        className="mb-6 sm:mb-8 rounded-lg border border-border bg-muted/40 p-4 sm:p-6"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <div className="flex flex-col items-center text-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center gap-2 sm:gap-3 justify-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground flex items-center gap-2 sm:gap-3 justify-center">
               <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               Choose Your Plan
             </h1>

@@ -51,16 +51,13 @@ export function AppDialogHeader({
       {!dense && (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 -z-0"
-        >
-          <div className="absolute -top-24 left-1/2 h-56 w-[120%] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,oklch(0.75_0.16_55_/_0.35),transparent_70%)] dark:bg-[radial-gradient(ellipse_at_center,oklch(0.55_0.14_55_/_0.25),transparent_70%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-        </div>
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-border"
+        />
       )}
 
       <div className="relative z-10 space-y-3">
         {icon && (
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             {icon}
           </div>
         )}

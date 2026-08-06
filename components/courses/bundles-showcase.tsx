@@ -49,9 +49,9 @@ export function BundlesShowcase() {
                     className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="h-44 w-full bg-gradient-to-br from-primary/15 via-secondary/15 to-primary/5 flex items-center justify-center">
-                    <div className="h-12 w-12 rounded-2xl bg-background/80 flex items-center justify-center shadow-md">
-                      <Package className="h-6 w-6 text-primary" />
+                  <div className="flex h-44 w-full items-center justify-center bg-muted">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <Package className="h-6 w-6" />
                     </div>
                   </div>
                 )}

@@ -147,8 +147,8 @@ export function StudentProgressDetail({
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                <Clock className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-2xl font-bold">

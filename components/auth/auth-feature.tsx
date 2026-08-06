@@ -18,7 +18,7 @@ export function AuthFeature({ icon: Icon, title, description, delay }: AuthFeatu
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
     >
-      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center flex-shrink-0 shadow-lg">
+      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 shadow-lg">
         <Icon className="h-6 w-6 text-primary" />
       </div>
       <div>

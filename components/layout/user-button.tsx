@@ -130,7 +130,7 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
               <div className="relative">
                 <Avatar className="h-12 w-12 ring-2 ring-primary/20 hover:ring-primary/30 transition-all duration-200 hover:scale-105">
                   <AvatarImage src={user.image || undefined} alt={user.name} />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-semibold shadow-lg text-lg">
+                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-lg">
                     {(user.name ?? "")
                       .split(" ")
                       .map((n) => n[0])
@@ -178,7 +178,7 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
                   src={user.image || "/placeholder.svg"}
                   alt={user.name}
                 />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white shadow-md text-base">
+                <AvatarFallback className="bg-primary text-primary-foreground text-base">
                   {(user.name ?? "")
                     .split(" ")
                     .map((n) => n[0])

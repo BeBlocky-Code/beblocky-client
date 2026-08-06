@@ -20,10 +20,10 @@ export function AuthSidebar({ mode }: AuthSidebarProps) {
 
   if (!isMounted) {
     return (
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/5 via-primary/3 to-secondary/5 backdrop-blur-lg p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-muted/40 backdrop-blur-lg p-12 flex-col justify-between relative overflow-hidden">
         <div className="relative z-10">
           <div className="mb-12">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl font-bold text-foreground mb-4">
               {mode === "signin" ? "Welcome back!" : "Join our community"}
             </h1>
             <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -39,7 +39,7 @@ export function AuthSidebar({ mode }: AuthSidebarProps) {
 
   return (
     <motion.div
-      className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/5 via-primary/3 to-secondary/5 backdrop-blur-lg p-12 flex-col justify-between relative overflow-hidden"
+      className="hidden lg:flex lg:w-1/2 bg-muted/40 backdrop-blur-lg p-12 flex-col justify-between relative overflow-hidden"
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4 }}
@@ -52,7 +52,7 @@ export function AuthSidebar({ mode }: AuthSidebarProps) {
         {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-32 h-32 rounded-full bg-gradient-to-br from-primary/10 to-secondary/10 blur-xl"
+            className="absolute w-32 h-32 rounded-full bg-primary/10 blur-xl"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -80,7 +80,7 @@ export function AuthSidebar({ mode }: AuthSidebarProps) {
           transition={{ delay: 0.2 }}
         >
           <motion.h1
-            className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent mb-4"
+            className="text-4xl font-bold text-foreground mb-4"
             animate={{
               backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
             }}
@@ -108,7 +108,7 @@ export function AuthSidebar({ mode }: AuthSidebarProps) {
 
       {/* Bottom decorative element */}
       <motion.div
-        className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent"
+        className="absolute bottom-0 left-0 right-0 h-px bg-border"
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ delay: 1.2, duration: 1 }}

@@ -136,7 +136,7 @@ export default function StudentProgressPage() {
       <div className="space-y-6">
         {/* Header */}
         <motion.div
-          className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-b border-border rounded-lg p-6"
+          className="bg-muted/40 border-b border-border rounded-lg p-6"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -154,7 +154,7 @@ export default function StudentProgressPage() {
               </Button>
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center gap-3">
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground flex items-center gap-3">
                 <TrendingUp className="h-8 w-8 text-primary" />
                 {userData?.name}'s Progress
               </h1>

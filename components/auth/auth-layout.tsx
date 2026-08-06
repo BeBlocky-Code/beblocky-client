@@ -15,7 +15,7 @@ interface AuthLayoutProps {
 export function AuthLayout({ children, mode }: AuthLayoutProps) {
   return (
     <div
-      className="min-h-screen flex bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800"
+      className="min-h-screen flex bg-background"
       suppressHydrationWarning
     >
       {/* Error handler for OAuth errors */}

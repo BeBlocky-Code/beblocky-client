@@ -27,12 +27,12 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   validatePhoneNumber,
   isInternational = false,
 }) => (
-  <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 border-blue-200 dark:border-blue-800">
+  <Card className="border-border">
     <CardContent className="p-4 sm:p-8">
       <div className="space-y-3 sm:space-y-4">
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="p-1.5 sm:p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-            <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+          <div className="rounded-lg bg-primary/10 p-1.5 text-primary sm:p-2">
+            <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
           <div>
             <Label className="text-sm sm:text-base font-semibold">

@@ -165,8 +165,8 @@ export function ProgressOverview({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                        <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                      <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                        <Clock className="h-4 w-4" />
                       </div>
                       <div>
                         <p className="text-sm font-medium">

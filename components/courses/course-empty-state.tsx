@@ -34,62 +34,59 @@ export function CourseEmptyState({ type, onUpgrade }: CourseEmptyStateProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
     >
-      <Card className="max-w-2xl mx-auto bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+      <Card className="mx-auto max-w-2xl border-border">
         <CardContent className="p-6 sm:p-12">
           <div className="mb-4 sm:mb-6">
-            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white mx-auto mb-3 sm:mb-4">
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary sm:mb-4 sm:h-20 sm:w-20">
               <Crown className="h-8 w-8 sm:h-10 sm:w-10" />
             </div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-3 sm:mb-4 text-center">
+            <h2 className="mb-3 text-center text-xl font-bold text-foreground sm:mb-4 sm:text-2xl md:text-3xl">
               Unlock More Courses
             </h2>
-            <p className="text-sm sm:text-lg text-muted-foreground mb-4 sm:mb-6 text-center">
+            <p className="mb-4 text-center text-sm text-muted-foreground sm:mb-6 sm:text-lg">
               Upgrade your plan to access our complete library of coding courses
               designed for young learners
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div className="text-center p-3 sm:p-4 rounded-lg bg-white/50 dark:bg-black/20">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-2 sm:mb-3">
-                <Smartphone className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+          <div className="mb-6 grid grid-cols-1 gap-3 sm:mb-8 sm:grid-cols-3 sm:gap-4">
+            <div className="rounded-lg bg-muted/50 p-3 text-center sm:p-4">
+              <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary sm:mb-3 sm:h-12 sm:w-12">
+                <Smartphone className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <h3 className="text-sm sm:text-base font-semibold mb-1">
+              <h3 className="mb-1 text-sm font-semibold sm:text-base">
                 Mobile Apps
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground sm:text-sm">
                 Interactive coding games
               </p>
             </div>
-            <div className="text-center p-3 sm:p-4 rounded-lg bg-white/50 dark:bg-black/20">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-2 sm:mb-3">
-                <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+            <div className="rounded-lg bg-muted/50 p-3 text-center sm:p-4">
+              <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary sm:mb-3 sm:h-12 sm:w-12">
+                <Globe className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <h3 className="text-sm sm:text-base font-semibold mb-1">
+              <h3 className="mb-1 text-sm font-semibold sm:text-base">
                 Web Development
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground sm:text-sm">
                 HTML, CSS, JavaScript
               </p>
             </div>
-            <div className="text-center p-3 sm:p-4 rounded-lg bg-white/50 dark:bg-black/20">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mx-auto mb-2 sm:mb-3">
-                <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+            <div className="rounded-lg bg-muted/50 p-3 text-center sm:p-4">
+              <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary sm:mb-3 sm:h-12 sm:w-12">
+                <Crown className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <h3 className="text-sm sm:text-base font-semibold mb-1">
+              <h3 className="mb-1 text-sm font-semibold sm:text-base">
                 Advanced Projects
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground sm:text-sm">
                 Real-world applications
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              onClick={onUpgrade}
-              className="gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
-            >
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <Button onClick={onUpgrade} className="gap-2">
               <Crown className="h-4 w-4" />
               Upgrade Now
             </Button>

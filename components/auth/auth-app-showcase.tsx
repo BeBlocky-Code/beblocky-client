@@ -42,23 +42,23 @@ export function AuthAppShowcase({ mode }: AppShowcaseProps) {
   if (!isMounted) {
     return (
       <div className="relative w-full rounded-3xl overflow-hidden shadow-2xl mb-12">
-        <div className="relative h-80 bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 via-purple-500/20 to-pink-500/30" />
+        <div className="relative h-80 bg-muted">
+          <div className="absolute inset-0 bg-primary/10" />
           <div className="absolute bottom-0 left-0 right-0 p-8">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-12 w-12 rounded-2xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
                 <Smartphone className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h2 className="text-white text-2xl font-bold drop-shadow-lg">
+                <h2 className="text-2xl font-bold text-foreground">
                   Beblocky
                 </h2>
-                <p className="text-white/90 text-sm drop-shadow">
+                <p className="text-sm text-muted-foreground">
                   Learn anywhere, anytime
                 </p>
               </div>
             </div>
-            <p className="text-white/90 text-sm mb-6 drop-shadow max-w-md">
+            <p className="mb-6 max-w-md text-sm text-muted-foreground">
               {mode === "signin"
                 ? "Continue your learning journey on mobile. Access all your courses, track progress, and stay connected with your students."
                 : "Download our mobile app and take your education platform with you. Perfect for on-the-go learning and teaching."}
@@ -66,22 +66,19 @@ export function AuthAppShowcase({ mode }: AppShowcaseProps) {
             <div className="flex gap-3">
               <Button
                 onClick={handlePlayStoreClick}
-                className="bg-white/90 hover:bg-white text-slate-900 border-0 shadow-lg backdrop-blur-sm font-medium"
+                className="border-0 bg-primary font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Get on Play Store
               </Button>
-              <Button
-                variant="outline"
-                className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm bg-transparent"
-              >
+              <Button variant="outline">
                 <Star className="h-4 w-4 mr-2" />
                 Rate App
               </Button>
             </div>
           </div>
         </div>
-        <div className="h-1 bg-gradient-to-r from-primary via-secondary to-primary" />
+        <div className="h-1 bg-primary" />
       </div>
     );
   }
@@ -95,24 +92,9 @@ export function AuthAppShowcase({ mode }: AppShowcaseProps) {
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
-      {/* Background with animated gradient */}
-      <div className="relative h-80 bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20">
-        {/* Animated gradient background */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-blue-500/30 via-purple-500/20 to-pink-500/30"
-          animate={{
-            background: [
-              "linear-gradient(to bottom right, rgba(59, 130, 246, 0.3), rgba(147, 51, 234, 0.2), rgba(236, 72, 153, 0.3))",
-              "linear-gradient(to bottom right, rgba(147, 51, 234, 0.3), rgba(236, 72, 153, 0.2), rgba(59, 130, 246, 0.3))",
-              "linear-gradient(to bottom right, rgba(236, 72, 153, 0.3), rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.3))",
-            ],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        />
+      {/* Background */}
+      <div className="relative h-80 bg-muted">
+        <div className="absolute inset-0 bg-primary/5" />
 
         {/* Main content */}
         <div className="absolute bottom-0 left-0 right-0 p-8">
@@ -123,23 +105,23 @@ export function AuthAppShowcase({ mode }: AppShowcaseProps) {
           >
             <div className="flex items-center gap-3 mb-4">
               <motion.div
-                className="h-12 w-12 rounded-2xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
-                <Smartphone className="h-6 w-6 text-primary" />
+                <Smartphone className="h-6 w-6" />
               </motion.div>
               <div>
-                <h2 className="text-white text-2xl font-bold drop-shadow-lg">
+                <h2 className="text-2xl font-bold text-foreground">
                   Beblocky Mobile
                 </h2>
-                <p className="text-white/90 text-sm drop-shadow">
+                <p className="text-sm text-muted-foreground">
                   Learn anywhere, anytime
                 </p>
               </div>
             </div>
 
-            <p className="text-white/90 text-sm mb-6 drop-shadow max-w-md">
+            <p className="mb-6 max-w-md text-sm text-muted-foreground">
               {mode === "signin"
                 ? "Continue your learning journey on mobile. Access all your courses, track progress, and stay connected with your students."
                 : "Download our mobile app and take your education platform with you. Perfect for on-the-go learning and teaching."}
@@ -153,7 +135,7 @@ export function AuthAppShowcase({ mode }: AppShowcaseProps) {
               >
                 <Button
                   onClick={handlePlayStoreClick}
-                  className="bg-white/90 hover:bg-white text-slate-900 border-0 shadow-lg backdrop-blur-sm font-medium"
+                  className="border-0 bg-primary font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Get on Play Store
@@ -164,10 +146,7 @@ export function AuthAppShowcase({ mode }: AppShowcaseProps) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Button
-                  variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm bg-transparent"
-                >
+                <Button variant="outline">
                   <Star className="h-4 w-4 mr-2" />
                   Rate App
                 </Button>
@@ -176,12 +155,12 @@ export function AuthAppShowcase({ mode }: AppShowcaseProps) {
           </motion.div>
         </div>
 
-        {/* Animated particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Soft accents */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {[...Array(6)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-2 h-2 bg-white/30 rounded-full"
+              className="absolute h-2 w-2 rounded-full bg-primary/20"
               style={{
                 left: `${20 + i * 15}%`,
                 top: `${30 + (i % 2) * 20}%`,
@@ -225,7 +204,7 @@ export function AuthAppShowcase({ mode }: AppShowcaseProps) {
 
       {/* Bottom gradient bar */}
       <motion.div
-        className="h-1 bg-gradient-to-r from-primary via-secondary to-primary"
+        className="h-1 bg-primary"
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ delay: 1, duration: 0.8 }}

@@ -57,7 +57,7 @@ export function AuthTestimonial({ mode }: AuthTestimonialProps) {
     return (
       <div className="relative z-10">
         <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-primary/10 shadow-lg">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/30 flex items-center justify-center mb-4">
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <Quote className="h-5 w-5 text-primary" />
           </div>
           <div className="flex gap-1 mb-4">
@@ -72,8 +72,8 @@ export function AuthTestimonial({ mode }: AuthTestimonialProps) {
           </p>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-                <span className="text-white font-semibold text-sm">
+              <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                <span className="text-sm font-semibold text-primary-foreground">
                   {currentTest.avatar}
                 </span>
               </div>
@@ -114,7 +114,7 @@ export function AuthTestimonial({ mode }: AuthTestimonialProps) {
       <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-primary/10 shadow-lg">
         {/* Quote icon */}
         <motion.div
-          className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/30 flex items-center justify-center mb-4"
+          className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mb-4"
           whileHover={{ scale: 1.1, rotate: 180 }}
           transition={{ duration: 0.3 }}
         >
@@ -150,11 +150,11 @@ export function AuthTestimonial({ mode }: AuthTestimonialProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <motion.div
-              className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg"
+              className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg"
               whileHover={{ scale: 1.1 }}
               transition={{ duration: 0.2 }}
             >
-              <span className="text-white font-semibold text-sm">
+              <span className="text-sm font-semibold text-primary-foreground">
                 {currentTest.avatar}
               </span>
             </motion.div>

@@ -58,14 +58,10 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
             : "hover:border-primary/30 hover:shadow-sm"
         } ${!method.available ? "opacity-50 cursor-not-allowed" : ""}`}
       >
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div
-            className={`absolute inset-0 bg-gradient-to-br from-primary to-secondary transform ${
-              hovered ? "scale-110" : "scale-100"
-            } transition-transform duration-500`}
-          />
-        </div>
+        {/* Soft selected wash */}
+        {selected && (
+          <div className="absolute inset-0 bg-primary/5" />
+        )}
 
         <CardHeader className="pb-3 sm:pb-4 relative">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
@@ -79,7 +75,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
 
               {/* Icon */}
               <motion.div
-                className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center text-primary border border-primary/20"
+                className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-primary/10 text-primary sm:h-14 sm:w-14"
                 animate={{
                   scale: selected ? 1.05 : 1,
                 }}
@@ -98,7 +94,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
                     {method.name}
                   </CardTitle>
                   {method.recommended && (
-                    <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-2 py-1 w-fit">
+                    <Badge className="bg-primary text-primary-foreground text-xs px-2 py-1 w-fit">
                       <Star className="h-3 w-3 mr-1" />
                       {method.popularityBadge || "Recommended"}
                     </Badge>
@@ -127,9 +123,9 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0 }}
-                  className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg self-center sm:self-auto"
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-primary self-center shadow-sm sm:h-8 sm:w-8 sm:self-auto"
                 >
-                  <Check className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                  <Check className="h-3 w-3 text-primary-foreground sm:h-4 sm:w-4" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -146,7 +142,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: featureIndex * 0.05 }}
               >
-                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-gradient-to-r from-primary to-secondary flex-shrink-0" />
+                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary flex-shrink-0" />
                 <span className="text-muted-foreground text-xs sm:text-sm font-medium line-clamp-1">
                   {feature}
                 </span>

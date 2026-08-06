@@ -145,7 +145,7 @@ export default function DeleteAccountPage() {
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-8 px-4">
+    <div className="min-h-screen bg-background py-8 px-4">
       <div className="container max-w-2xl mx-auto">
         {/* Header */}
         <motion.div

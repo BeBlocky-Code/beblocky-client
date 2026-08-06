@@ -128,9 +128,7 @@ export default function CoursesPage() {
       name: "Free Plan",
       description: "Perfect for getting started with basic coding concepts",
       icon: <Sparkles className="h-5 w-5" />,
-      gradient:
-        "from-gray-50 to-gray-100 dark:from-gray-950/50 dark:to-gray-900/50",
-      color: "text-gray-600",
+      color: "text-primary",
       badgeVariant: "secondary" as const,
     },
     [CourseSubscriptionType.STARTER]: {
@@ -138,27 +136,21 @@ export default function CoursesPage() {
       description:
         "Full mobile experience with engaging puzzles and characters",
       icon: <Smartphone className="h-5 w-5" />,
-      gradient:
-        "from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50",
-      color: "text-blue-600",
+      color: "text-primary",
       badgeVariant: "default" as const,
     },
     [CourseSubscriptionType.BUILDER]: {
       name: "Builder Plan",
       description: "Transition to real coding with web technologies",
       icon: <Globe className="h-5 w-5" />,
-      gradient:
-        "from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50",
-      color: "text-green-600",
+      color: "text-primary",
       badgeVariant: "default" as const,
     },
     [CourseSubscriptionType.PRO]: {
       name: "Pro Bundle",
       description: "Complete learning experience with advanced features",
       icon: <Crown className="h-5 w-5" />,
-      gradient:
-        "from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50",
-      color: "text-purple-600",
+      color: "text-primary",
       badgeVariant: "default" as const,
     },
     // Add fallback for any unknown plan types
@@ -166,18 +158,14 @@ export default function CoursesPage() {
       name: "Other",
       description: "Additional courses",
       icon: <Sparkles className="h-5 w-5" />,
-      gradient:
-        "from-gray-50 to-gray-100 dark:from-gray-950/50 dark:to-gray-900/50",
-      color: "text-gray-600",
+      color: "text-muted-foreground",
       badgeVariant: "secondary" as const,
     },
     [CourseSubscriptionType.ORGANIZATION]: {
       name: "Organization",
       description: "Enterprise solutions for schools and organizations",
       icon: <Building className="h-5 w-5" />,
-      gradient:
-        "from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50",
-      color: "text-orange-600",
+      color: "text-primary",
       badgeVariant: "default" as const,
     },
   };

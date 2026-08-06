@@ -17,10 +17,10 @@ export function SchoolPlan() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
       >
-        <Card className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-950/50 dark:to-slate-900/50 border-slate-200 dark:border-slate-800">
+        <Card className="border-border">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center text-white">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Building className="h-8 w-8" />
               </div>
 

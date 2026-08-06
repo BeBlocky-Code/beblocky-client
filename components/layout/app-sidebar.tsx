@@ -140,14 +140,6 @@ export function AppSidebar({ items }: Props) {
                 width={isCollapsed ? 40 : 150}
                 height={isCollapsed ? 40 : 150}
               />
-              {!isCollapsed && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white animate-pulse"
-                >
-                  BETA
-                </Badge>
-              )}
             </Link>
           </div>
         </motion.div>
@@ -214,7 +206,7 @@ export function AppSidebar({ items }: Props) {
                         {item.label && (
                           <Badge
                             variant="secondary"
-                            className="ml-auto text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                            className="ml-auto text-xs bg-primary text-primary-foreground"
                           >
                             {item.label}
                           </Badge>

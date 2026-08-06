@@ -26,21 +26,18 @@ const popularPages = [
     description: "View your learning progress and stats",
     href: "/",
     icon: Home,
-    color: "from-blue-500 to-cyan-500",
   },
   {
     title: "Courses",
     description: "Browse and manage your courses",
     href: "/courses",
     icon: BookOpen,
-    color: "from-purple-500 to-pink-500",
   },
   {
     title: "Classes",
     description: "Manage your classes and students",
     href: "/classes",
     icon: Users,
-    color: "from-green-500 to-emerald-500",
   },
 ];
 
@@ -99,11 +96,11 @@ export default function NotFound() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-      <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-secondary/20 to-primary/20 rounded-full blur-3xl" />
+      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
 
       <div className="relative z-10 container mx-auto px-4 py-16">
         <motion.div
@@ -119,11 +116,11 @@ export default function NotFound() {
               animate="animate"
               className="relative"
             >
-              <div className="text-8xl md:text-9xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+              <div className="text-8xl md:text-9xl font-bold text-foreground">
                 404
               </div>
               <motion.div
-                className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+                className="absolute -top-4 -right-4 h-8 w-8 rounded-full bg-primary"
                 animate={{
                   scale: [1, 1.2, 1],
                   opacity: [0.7, 1, 0.7],
@@ -135,7 +132,7 @@ export default function NotFound() {
                 }}
               />
               <motion.div
-                className="absolute -bottom-2 -left-6 w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full"
+                className="absolute -bottom-2 -left-6 h-6 w-6 rounded-full bg-secondary"
                 animate={{
                   scale: [1, 1.3, 1],
                   opacity: [0.5, 1, 0.5],
@@ -254,9 +251,7 @@ export default function NotFound() {
                     <Card className="h-full backdrop-blur-sm bg-card/50 border-border/50 hover:bg-card/80 transition-all duration-300 overflow-hidden">
                       <CardContent className="p-6 space-y-4">
                         <div className="flex items-center justify-between">
-                          <div
-                            className={`p-3 rounded-xl bg-gradient-to-r ${page.color} text-white`}
-                          >
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                             <page.icon className="h-6 w-6" />
                           </div>
                           <Badge
@@ -293,7 +288,7 @@ export default function NotFound() {
               <Button
                 asChild
                 size="lg"
-                className="h-12 px-8 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground shadow-lg"
+                className="h-12 px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
               >
                 <Link href="/" className="flex items-center gap-2">
                   <Home className="h-5 w-5" />

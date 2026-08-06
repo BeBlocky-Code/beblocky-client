@@ -91,14 +91,14 @@ export function ChildrenList({
     <div className="space-y-6">
       {/* Header */}
       <motion.div
-        className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-b border-border rounded-lg p-6"
+        className="rounded-lg border border-border bg-muted/40 p-6"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent flex items-center gap-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground flex items-center gap-3">
               <Users className="h-8 w-8 text-primary" />
               Manage Children
             </h1>
@@ -179,7 +179,7 @@ export function ChildrenList({
               <Card className="h-full shadow-lg hover:shadow-xl transition-all duration-300 group">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
                       {child.name?.charAt(0)?.toUpperCase() || "?"}
                     </div>
                     <div className="flex gap-2">

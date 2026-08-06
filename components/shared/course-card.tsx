@@ -121,8 +121,8 @@ export function CourseCard({
         >
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
-              <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center group-hover:scale-110 transition-transform">
-                <BookOpen className="h-6 w-6 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <BookOpen className="h-6 w-6" />
               </div>
               <Badge
                 variant={course.status === "Active" ? "default" : "secondary"}

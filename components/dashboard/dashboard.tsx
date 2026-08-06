@@ -54,7 +54,7 @@ export function ModernDashboard({
     <div className="min-h-screen bg-background">
       {/* Header Section */}
       <motion.div
-        className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-b"
+        className="border-b bg-muted/40"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -62,7 +62,7 @@ export function ModernDashboard({
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground">
                 Welcome back, {user.name}!
               </h1>
               <p className="text-muted-foreground mt-2">
@@ -109,25 +109,25 @@ export function ModernDashboard({
           animate="visible"
         >
           <motion.div variants={itemVariants}>
-            <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <Card className="p-6 transition-shadow duration-300 hover:shadow-md group">
               <div className="flex items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   {userType === "student"
                     ? "Enrolled Courses"
                     : "Total Children"}
                 </CardTitle>
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                   {userType === "student" ? (
-                    <BookOpen className="h-4 w-4 text-white" />
+                    <BookOpen className="h-4 w-4" />
                   ) : (
-                    <Users className="h-4 w-4 text-white" />
+                    <Users className="h-4 w-4" />
                   )}
                 </div>
               </div>
-              <div className="text-2xl font-bold text-blue-800 dark:text-blue-200">
+              <div className="text-2xl font-bold">
                 {userType === "student" ? (stats as any)?.totalCourses || 0 : children.length}
               </div>
-              <p className="text-xs text-blue-600 dark:text-blue-400">
+              <p className="text-xs text-muted-foreground">
                 {userType === "student"
                   ? "Active learning paths"
                   : "Children registered"}
@@ -136,45 +136,45 @@ export function ModernDashboard({
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <Card className="p-6 transition-shadow duration-300 hover:shadow-md group">
               <div className="flex items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   {userType === "student" ? "Coding Streak" : "Active Courses"}
                 </CardTitle>
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                   {userType === "student" ? (
-                    <Target className="h-4 w-4 text-white" />
+                    <Target className="h-4 w-4" />
                   ) : (
-                    <TrendingUp className="h-4 w-4 text-white" />
+                    <TrendingUp className="h-4 w-4" />
                   )}
                 </div>
               </div>
-              <div className="text-2xl font-bold text-green-800 dark:text-green-200">
+              <div className="text-2xl font-bold">
                 {userType === "student"
                   ? `${(stats as any)?.codingStreak || 0} days`
                   : (stats as any)?.activeChildren || 0}
               </div>
-              <p className="text-xs text-green-600 dark:text-green-400">
+              <p className="text-xs text-muted-foreground">
                 {userType === "student" ? "Keep it up!" : "Currently active"}
               </p>
             </Card>
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Card className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200 dark:border-purple-800 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <Card className="p-6 transition-shadow duration-300 hover:shadow-md group">
               <div className="flex items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   {userType === "student" ? "Total Coins" : "Average Progress"}
                 </CardTitle>
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                   {userType === "student" ? (
-                    <Coins className="h-4 w-4 text-white" />
+                    <Coins className="h-4 w-4" />
                   ) : (
-                    <Award className="h-4 w-4 text-white" />
+                    <Award className="h-4 w-4" />
                   )}
                 </div>
               </div>
-              <div className="text-2xl font-bold text-purple-800 dark:text-purple-200">
+              <div className="text-2xl font-bold">
                 {userType === "student"
                   ? (stats as any)?.totalCoins || 0
                   : `${(stats as any)?.averageProgress || 0}%`}
@@ -182,7 +182,7 @@ export function ModernDashboard({
               {userType === "parent" && (
                 <Progress value={(stats as any)?.averageProgress || 0} className="mt-2 h-2" />
               )}
-              <p className="text-xs text-purple-600 dark:text-purple-400">
+              <p className="text-xs text-muted-foreground">
                 {userType === "student"
                   ? "Earned through learning"
                   : "Across all children"}
@@ -191,21 +191,21 @@ export function ModernDashboard({
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <Card className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50 border-orange-200 dark:border-orange-800 shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <Card className="p-6 transition-shadow duration-300 hover:shadow-md group">
               <div className="flex items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   Time Spent
                 </CardTitle>
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Clock className="h-4 w-4 text-white" />
+                <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <Clock className="h-4 w-4" />
                 </div>
               </div>
-              <div className="text-2xl font-bold text-orange-800 dark:text-orange-200">
+              <div className="text-2xl font-bold">
                 {userType === "student" 
                   ? `${Math.floor(((stats as any)?.timeSpent || 0) / 60)}h ${((stats as any)?.timeSpent || 0) % 60}m`
                   : `${Math.floor(((stats as any)?.totalTimeSpent || 0) / 60)}h ${((stats as any)?.totalTimeSpent || 0) % 60}m`}
               </div>
-              <p className="text-xs text-orange-600 dark:text-orange-400">
+              <p className="text-xs text-muted-foreground">
                 Total learning time
               </p>
             </Card>
@@ -239,8 +239,8 @@ export function ModernDashboard({
                       transition={{ delay: index * 0.1 }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                          <BookOpen className="h-5 w-5 text-white" />
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                          <BookOpen className="h-5 w-5" />
                         </div>
                         <div>
                           <h4 className="font-medium">{course.courseTitle}</h4>
@@ -320,8 +320,8 @@ function CourseCard({ course, index }: { course: ICourse; index: number }) {
       <Card className="h-full shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
-            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center group-hover:scale-110 transition-transform">
-              <BookOpen className="h-6 w-6 text-white" />
+            <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <BookOpen className="h-6 w-6" />
             </div>
             <Badge
               variant={course.status === "Active" ? "default" : "secondary"}
@@ -378,7 +378,7 @@ function StudentCard({ student, index }: { student: IStudentWithUserData; index:
       <Card className="h-full shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
-            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
+            <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
               {student.name?.charAt(0)?.toUpperCase() || "?"}
             </div>
             <Badge variant="secondary">

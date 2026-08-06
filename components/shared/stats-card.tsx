@@ -10,9 +10,6 @@ interface StatsCardProps {
   value: string | number;
   description: string;
   icon: LucideIcon;
-  gradient: string;
-  iconColor: string;
-  textColor: string;
   showProgress?: boolean;
   progressValue?: number;
   delay?: number;
@@ -23,9 +20,6 @@ export function StatsCard({
   value,
   description,
   icon: Icon,
-  gradient,
-  iconColor,
-  textColor,
   showProgress = false,
   progressValue,
   delay = 0,
@@ -36,36 +30,20 @@ export function StatsCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
     >
-      <Card
-        className={`p-6 ${gradient} shadow-lg hover:shadow-xl transition-all duration-300 group`}
-      >
+      <Card className="p-6 transition-shadow duration-300 hover:shadow-md group">
         <div className="flex items-center justify-between space-y-0 pb-2">
-          <CardTitle className={`text-sm font-medium ${textColor}`}>
+          <CardTitle className="text-sm font-medium text-muted-foreground">
             {title}
           </CardTitle>
-          <div
-            className={`h-8 w-8 rounded-lg ${iconColor} flex items-center justify-center group-hover:scale-110 transition-transform`}
-          >
-            <Icon className="h-4 w-4 text-white" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Icon className="h-4 w-4" />
           </div>
         </div>
-        <div
-          className={`text-2xl font-bold ${textColor
-            .replace("300", "200")
-            .replace("700", "800")}`}
-        >
-          {value}
-        </div>
+        <div className="text-2xl font-bold text-foreground">{value}</div>
         {showProgress && progressValue !== undefined && (
           <Progress value={progressValue} className="mt-2 h-2" />
         )}
-        <p
-          className={`text-xs ${textColor
-            .replace("300", "400")
-            .replace("700", "600")}`}
-        >
-          {description}
-        </p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </Card>
     </motion.div>
   );

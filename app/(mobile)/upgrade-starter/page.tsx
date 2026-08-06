@@ -38,7 +38,6 @@ interface PricingPlan {
   features: string[];
   popular?: boolean;
   icon: React.ReactNode;
-  gradient: string;
   note?: string;
 }
 
@@ -57,8 +56,6 @@ const starterPlan: PricingPlan = {
     "Email support",
   ],
   icon: <Smartphone className="h-6 w-6" />,
-  gradient:
-    "from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50",
   note: "Competes directly with Kodable, codeSpark",
 };
 
@@ -201,7 +198,7 @@ export default function UpgradeStarterPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-4">
+        <h1 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">
           Unlock the Starter Plan
         </h1>
         <p className="text-muted-foreground text-lg mx-auto">
@@ -237,9 +234,7 @@ export default function UpgradeStarterPage() {
           </div>
 
           <CardHeader className="text-center pb-4">
-            <div
-              className={`h-16 w-16 rounded-full bg-gradient-to-br ${starterPlan.gradient} flex items-center justify-center mx-auto mb-4 text-primary`}
-            >
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
               {starterPlan.icon}
             </div>
             <CardTitle className="text-xl mb-2">{starterPlan.name}</CardTitle>
@@ -281,7 +276,7 @@ export default function UpgradeStarterPage() {
             </ul>
 
             <Button
-              className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 transition-all duration-300 group shadow-lg"
+              className="w-full h-12 text-lg font-semibold bg-primary hover:bg-primary/90 transition-all duration-300 group shadow-lg"
               size="lg"
               onClick={handleChoosePlan}
               disabled={paymentLoading || loadingChildren}

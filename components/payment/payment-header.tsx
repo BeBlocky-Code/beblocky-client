@@ -13,7 +13,7 @@ const PaymentHeader: React.FC = () => (
       <Lock className="h-3 w-3 sm:h-4 sm:w-4" />
       Secure Payment
     </div>
-    <h3 className="text-xl sm:text-2xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+    <h3 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">
       Choose Payment Method
     </h3>
     <p className="text-sm sm:text-base text-muted-foreground">

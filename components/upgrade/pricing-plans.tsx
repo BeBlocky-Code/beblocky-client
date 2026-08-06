@@ -16,7 +16,6 @@ interface PricingPlan {
   features: string[];
   popular?: boolean;
   icon: React.ReactNode;
-  gradient: string;
   note?: string;
 }
 
@@ -98,7 +97,7 @@ export function PricingPlans({
             }`}
           >
             {plan.popular && (
-              <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-secondary text-white text-center py-2 text-sm font-semibold">
+              <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center py-2 text-sm font-semibold">
                 Most Popular
               </div>
             )}
@@ -107,9 +106,7 @@ export function PricingPlans({
               className={`pt-4 sm:pt-6 ${plan.popular ? "mt-6 sm:mt-8" : ""}`}
             >
               <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <div
-                  className={`p-2 sm:p-3 rounded-lg bg-gradient-to-br ${plan.gradient}`}
-                >
+                <div className="rounded-lg bg-primary/10 p-2 text-primary sm:p-3">
                   {plan.icon}
                 </div>
                 <div>
@@ -158,11 +155,7 @@ export function PricingPlans({
               ) : shouldShowChoosePlan(plan.id) ? (
                 <Button
                   onClick={() => onChoosePlan(plan.id)}
-                  className={`w-full ${
-                    plan.popular
-                      ? "bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
-                      : ""
-                  }`}
+                  className="w-full"
                 >
                   Choose Plan
                 </Button>

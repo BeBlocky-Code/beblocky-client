@@ -105,9 +105,6 @@ export function ParentDashboard({
             value={stats.totalChildren}
             description="Children registered"
             icon={Users}
-            gradient="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800"
-            iconColor="bg-gradient-to-br from-blue-500 to-blue-600"
-            textColor="text-blue-700 dark:text-blue-300"
             delay={0.1}
           />
 
@@ -116,9 +113,6 @@ export function ParentDashboard({
             value={stats.activeChildren}
             description="Currently learning"
             icon={TrendingUp}
-            gradient="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800"
-            iconColor="bg-gradient-to-br from-green-500 to-green-600"
-            textColor="text-green-700 dark:text-green-300"
             delay={0.2}
           />
 
@@ -127,9 +121,6 @@ export function ParentDashboard({
             value={stats.totalCoinsEarned}
             description="Across all children"
             icon={Coins}
-            gradient="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200 dark:border-purple-800"
-            iconColor="bg-gradient-to-br from-purple-500 to-purple-600"
-            textColor="text-purple-700 dark:text-purple-300"
             delay={0.3}
           />
 
@@ -140,9 +131,6 @@ export function ParentDashboard({
             }m`}
             description="Combined learning time"
             icon={Clock}
-            gradient="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50 border-orange-200 dark:border-orange-800"
-            iconColor="bg-gradient-to-br from-orange-500 to-orange-600"
-            textColor="text-orange-700 dark:text-orange-300"
             delay={0.4}
           />
         </motion.div>
@@ -173,9 +161,9 @@ export function ParentDashboard({
                       {stats.averageProgress}%
                     </span>
                   </div>
-                  <div className="w-full bg-secondary rounded-full h-3">
+                  <div className="w-full bg-muted rounded-full h-3">
                     <div
-                      className="bg-gradient-to-r from-primary to-secondary h-3 rounded-full transition-all duration-500"
+                      className="bg-primary h-3 rounded-full transition-all duration-500"
                       style={{ width: `${stats.averageProgress}%` }}
                     />
                   </div>
@@ -206,7 +194,7 @@ export function ParentDashboard({
                       transition={{ delay: index * 0.1 }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white font-bold">
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
                           {child.name?.charAt(0) || "?"}
                         </div>
                         <div>

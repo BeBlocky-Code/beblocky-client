@@ -27,7 +27,7 @@ export function StudentCard({
       <Card className="h-full shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
-            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
+            <div className="h-12 w-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
               {student.name?.charAt(0)?.toUpperCase() || "?"}
             </div>
             <Badge variant="secondary">
