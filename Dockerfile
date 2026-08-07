@@ -8,10 +8,12 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat
 
 # Enable pnpm via Corepack (version pinned by package.json "packageManager")
+# CI=true: pnpm 11 treats ignored builds as errors and must not prompt in Docker
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+ENV CI=true
 RUN corepack enable
 
-# Copy package files (pnpm-workspace.yaml carries allowBuilds for sharp/unrs-resolver)
+# pnpm-workspace.yaml is required: allowBuilds approves sharp/unrs-resolver postinstalls
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 
 # Install dependencies
