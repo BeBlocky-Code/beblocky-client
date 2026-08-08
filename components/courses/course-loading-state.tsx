@@ -1,7 +1,8 @@
 "use client";
 
-import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CoursesPageSkeleton } from "@/components/skeletons";
 
 interface CourseLoadingStateProps {
   loading: boolean;
@@ -16,21 +17,10 @@ export function CourseLoadingState({
   error = null,
   onRetry,
 }: CourseLoadingStateProps) {
-  // Loading State
   if (sessionLoading || loading) {
-    return (
-      <div className="flex items-center justify-center py-12 sm:py-20">
-        <div className="text-center">
-          <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary mx-auto mb-3 sm:mb-4" />
-          <p className="text-sm sm:text-base text-muted-foreground">
-            {sessionLoading ? "Loading session..." : "Loading courses..."}
-          </p>
-        </div>
-      </div>
-    );
+    return <CoursesPageSkeleton />;
   }
 
-  // Error State
   if (error) {
     return (
       <div className="flex items-center justify-center py-12 sm:py-20">

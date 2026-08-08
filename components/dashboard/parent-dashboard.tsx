@@ -11,14 +11,14 @@ import {
   UserPlus,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { StatsCard } from "@/components/shared/stats-card";
 import type { IParentDashboardProps } from "@/types/dashboard-simple";
 import type { IStudent } from "@/types/student";
 import { StudentCard } from "@/components/shared/student-card";
-// Import the AddChildDialog component at the top
 import { AddChildDialog } from "@/components/children/add-child-dialog";
-import { studentApi } from "@/lib/api/student";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 export function ParentDashboard({
   parent,
@@ -27,58 +27,15 @@ export function ParentDashboard({
   selectedTab = "overview",
 }: IParentDashboardProps & { selectedTab?: "overview" | "children" }) {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
   type UIStudent = IStudent & { _id?: string; name?: string; email?: string };
-  const [recentActivityStudents, setRecentActivityStudents] = useState<
-    UIStudent[]
-  >([]);
-  const [resolvedChildren, setResolvedChildren] = useState<UIStudent[]>(
-    children as unknown as UIStudent[]
+
+  // Use children from the parent query — no per-child re-fetch.
+  const resolvedChildren = children as unknown as UIStudent[];
+  const recentActivityStudents = useMemo(
+    () => resolvedChildren.slice(0, 3),
+    [resolvedChildren]
   );
-
-  // Set recent activity students from children data
-  useEffect(() => {
-    if (children.length > 0) {
-      const recentChildren = children.slice(0, 3);
-      setRecentActivityStudents(recentChildren);
-    }
-  }, [children]);
-
-  const refreshChildren = async () => {
-    try {
-      // Attempt to resolve child data with user info for display fields
-      const enriched: UIStudent[] = [];
-      for (const raw of children as unknown as UIStudent[]) {
-        const studentId =
-          (raw as any)?._id ?? (raw as any)?.id ?? (raw as any)?.studentId;
-        if (!studentId) {
-          enriched.push(raw);
-          continue;
-        }
-        const student = await studentApi.getStudent(studentId as string);
-        const name = (student as unknown as { name?: string }).name ?? (raw as UIStudent).name;
-        const email = (raw as UIStudent).email;
-        enriched.push({
-          ...(raw as Partial<UIStudent>),
-          ...(student as unknown as Partial<UIStudent>),
-          _id: ((raw as any)?._id ?? (student as any)?._id) as string,
-          name,
-          email,
-        } as UIStudent);
-      }
-      setResolvedChildren(enriched);
-      setRecentActivityStudents(enriched.slice(0, 3));
-    } catch (e) {
-      // fallback to original children
-      const fallback = children as unknown as UIStudent[];
-      setResolvedChildren(fallback);
-      setRecentActivityStudents(fallback.slice(0, 3));
-    }
-  };
-
-  useEffect(() => {
-    refreshChildren();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [children]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -326,7 +283,16 @@ export function ParentDashboard({
           open={addDialogOpen}
           onOpenChange={setAddDialogOpen}
           parentId={parent?._id}
-          onSuccess={refreshChildren}
+          onSuccess={() => {
+            if (parent?._id) {
+              void queryClient.invalidateQueries({
+                queryKey: queryKeys.parents.children(parent._id),
+              });
+              void queryClient.invalidateQueries({
+                queryKey: queryKeys.parents.detail(parent._id),
+              });
+            }
+          }}
         />
       </div>
     </div>

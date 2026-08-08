@@ -23,13 +23,11 @@ import type { IStudentProgress } from "@/types/dashboard-simple";
 import { useSubscription } from "@/hooks/use-subscription";
 import { filterCoursesBySubscription } from "@/lib/utils/subscription-hierarchy";
 import { CourseStatus } from "@/types/course";
-import { progressApi } from "@/lib/api/progress";
-import { studentApi } from "@/lib/api/student";
-import { courseApi } from "@/lib/api/course";
+import { useStudentByUserId, useStudentProgress } from "@/lib/hooks";
 import { HourOfCodeShowcase } from "@/components/progress/hour-of-code-showcase";
 import { useSession } from "@/lib/auth-client";
 import { getIdeLearnUrl } from "@/lib/utils";
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 export function StudentDashboard({
   courses,
@@ -38,16 +36,11 @@ export function StudentDashboard({
 }: IStudentDashboardProps) {
   const { subscription } = useSubscription();
   const { data: session } = useSession();
-  const [enrolledCourses, setEnrolledCourses] = useState<ICourse[]>([]);
-  const [studentId, setStudentId] = useState<string | null>(null);
-  const [allProgress, setAllProgress] = useState<IStudentProgress[]>([]);
-  const [recentActivity, setRecentActivity] = useState<
-    Array<{
-      course: ICourse;
-      progress: IStudentProgress;
-    }>
-  >([]);
-  const [averageProgress, setAverageProgress] = useState<number>(0);
+
+  // Shares the cache with the dashboard page, so neither the student record nor
+  // its progress is requested twice on first paint.
+  const { data: student } = useStudentByUserId(session?.user?.id);
+  const { data: progressRecords } = useStudentProgress(student?._id);
 
   // Filter courses based on user's subscription plan and active status
   // This gives us ALL courses the user can access with their current subscription
@@ -58,118 +51,67 @@ export function StudentDashboard({
     );
   }, [courses, subscription?.planName]);
 
-  // Fetch all progress data for the student
-  useEffect(() => {
-    const fetchAllProgressData = async () => {
-      if (!session?.user?.id) return;
+  const averageProgress = useMemo(() => {
+    if (!progressRecords || progressRecords.length === 0) return 0;
+    const total = progressRecords.reduce(
+      (sum, progress) => sum + ((progress as any).completionPercentage || 0),
+      0
+    );
+    return Math.round(total / progressRecords.length);
+  }, [progressRecords]);
 
-      try {
-        // Get student record
-        const student = await studentApi.getStudentByUserId(session.user.id);
-        setStudentId(student._id);
-        console.log("--------student", student);
+  /** Progress records joined to their course, newest first. */
+  const recentActivity = useMemo(() => {
+    if (!progressRecords) return [];
 
-        // Get student's progress for all courses
-        const progressData = await progressApi.getStudentProgress(student._id);
-        setAllProgress(progressData);
-        console.log("--------progressData", progressData);
+    return progressRecords
+      .map((progress) => {
+        // courseId arrives populated as an object on this endpoint.
+        const courseRef =
+          typeof progress.courseId === "object" && progress.courseId !== null
+            ? (progress.courseId as any)
+            : null;
+        if (!courseRef?._id) return null;
 
-        // Calculate average progress from completionPercentage attribute
-        if (progressData.length > 0) {
-          const totalPercentage = progressData.reduce(
-            (sum, progress) =>
-              sum + ((progress as any).completionPercentage || 0),
-            0
-          );
-          const average = Math.round(totalPercentage / progressData.length);
-          setAverageProgress(average);
-        } else {
-          setAverageProgress(0);
-        }
+        const course: Partial<ICourse> = courses.find(
+          (c) => c._id === courseRef._id
+        ) ?? {
+          _id: courseRef._id,
+          courseTitle: courseRef.courseTitle || "Unknown Course",
+          courseLanguage: courseRef.courseLanguage || "Unknown",
+          subType: courseRef.subType || "Unknown",
+          courseDescription: courseRef.courseDescription || "",
+          rating: courseRef.rating || 0,
+          status: courseRef.status || "Active",
+          createdAt: courseRef.createdAt || new Date(),
+          updatedAt: courseRef.updatedAt || new Date(),
+        };
 
-        // Map progress data with course information
-        // Use courseId object from progress if available, otherwise find in courses array
-        const activityWithCourses = progressData.map((progress) => {
-          // Extract courseId - it's an object with _id and courseTitle
-          const courseIdObj =
-            typeof progress.courseId === "object" && progress.courseId !== null
-              ? (progress.courseId as any)
-              : null;
+        return { course: course as ICourse, progress };
+      })
+      .filter(
+        (item): item is { course: ICourse; progress: IStudentProgress } =>
+          item !== null
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.progress.updatedAt).getTime() -
+          new Date(a.progress.updatedAt).getTime()
+      );
+  }, [courses, progressRecords]);
 
-          if (!courseIdObj || !courseIdObj._id) {
-            console.warn("No valid courseId found in progress:", progress);
-            return null;
-          }
-
-          // Try to find course in the courses prop array first
-          const courseFromProp = courses.find((c) => c._id === courseIdObj._id);
-
-          // If found in prop, use it; otherwise construct from courseId object
-          // We might not have all properties, but we'll use what we have
-          const course: Partial<ICourse> = courseFromProp
-            ? courseFromProp
-            : {
-                _id: courseIdObj._id,
-                courseTitle: courseIdObj.courseTitle || "Unknown Course",
-                courseLanguage: courseIdObj.courseLanguage || "Unknown",
-                subType: courseIdObj.subType || "Unknown",
-                courseDescription: courseIdObj.courseDescription || "",
-                rating: courseIdObj.rating || 0,
-                status: courseIdObj.status || "Active",
-                createdAt: courseIdObj.createdAt || new Date(),
-                updatedAt: courseIdObj.updatedAt || new Date(),
-              };
-
-          return {
-            course: course as ICourse,
-            progress,
-          };
-        });
-
-        // Filter out null values and ensure both course and progress are valid, then sort by updatedAt (latest first)
-        const validActivity = activityWithCourses
-          .filter(
-            (item): item is { course: ICourse; progress: IStudentProgress } =>
-              item !== null &&
-              item !== undefined &&
-              item.course !== null &&
-              item.course !== undefined &&
-              item.progress !== null &&
-              item.progress !== undefined
-          )
-          .sort((a, b) => {
-            const dateA = new Date(a.progress.updatedAt).getTime();
-            const dateB = new Date(b.progress.updatedAt).getTime();
-            return dateB - dateA; // Latest first
-          });
-
-        setRecentActivity(validActivity);
-
-        // Filter courses that have progress (enrolled) for backwards compatibility
-        const enrolled = accessibleCourses.filter((course) =>
-          progressData.some((progress) => {
-            const courseId =
-              typeof progress.courseId === "object" &&
-              progress.courseId !== null
-                ? (progress.courseId as any)._id
-                : progress.courseId;
-            return courseId === course._id;
-          })
-        );
-
-        setEnrolledCourses(enrolled);
-      } catch (error) {
-        console.warn("Failed to fetch progress data:", error);
-        setAllProgress([]);
-        setRecentActivity([]);
-        setAverageProgress(0);
-        setEnrolledCourses([]);
-      }
-    };
-
-    fetchAllProgressData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id, accessibleCourses, courses]);
+  const enrolledCourses = useMemo(() => {
+    if (!progressRecords) return [];
+    return accessibleCourses.filter((course) =>
+      progressRecords.some((progress) => {
+        const courseId =
+          typeof progress.courseId === "object" && progress.courseId !== null
+            ? (progress.courseId as any)._id
+            : progress.courseId;
+        return courseId === course._id;
+      })
+    );
+  }, [accessibleCourses, progressRecords]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -382,14 +324,26 @@ export function StudentDashboard({
             </Card>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {accessibleCourses.map((course, index) => (
-                <CourseCard
-                  key={course._id}
-                  course={course}
-                  index={index}
-                  showProgress={true}
-                />
-              ))}
+              {accessibleCourses.map((course, index) => {
+                const enrolled = enrolledCourses.some((c) => c._id === course._id);
+                return (
+                  <CourseCard
+                    key={course._id}
+                    course={course}
+                    index={index}
+                    showProgress={true}
+                    isEnrolled={enrolled}
+                    studentsCount={
+                      Array.isArray(course.students) ? course.students.length : 0
+                    }
+                    totalHours={
+                      Array.isArray(course.lessons) && course.lessons.length > 0
+                        ? Math.max(1, course.lessons.length)
+                        : 2
+                    }
+                  />
+                );
+              })}
             </div>
           </motion.div>
         )}

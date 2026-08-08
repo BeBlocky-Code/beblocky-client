@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 interface SearchBarProps {
   className?: string;
@@ -14,15 +15,15 @@ interface SearchBarProps {
 export function SearchBar({ className, onSearch }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const router = useRouter();
 
   const handleSearch = (value: string) => {
     setQuery(value);
     onSearch?.(value);
 
-    // If search query is not empty, redirect to courses page with search
     if (value.trim()) {
       const searchParams = new URLSearchParams({ q: value.trim() });
-      window.location.href = `/courses?${searchParams.toString()}`;
+      router.push(`/courses?${searchParams.toString()}`);
     }
   };
 
