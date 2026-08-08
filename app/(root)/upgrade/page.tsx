@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CalendarClock, Crown, Sparkles, Smartphone, Globe } from "lucide-react";
+import { CalendarClock, Crown, BookOpen, Smartphone, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import { usePayment } from "@/hooks/use-payment";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -65,7 +65,7 @@ const pricingPlans: PricingPlan[] = [
       "Intro level content",
       "Community support",
     ],
-    icon: <Sparkles className="h-6 w-6" />,
+    icon: <BookOpen className="h-6 w-6" />,
   },
   {
     id: "starter",

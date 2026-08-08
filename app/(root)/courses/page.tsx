@@ -7,7 +7,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Sparkles, Smartphone, Globe, Building, Crown } from "lucide-react";
+import {
+  BookOpen,
+  Layers,
+  Smartphone,
+  Globe,
+  Building,
+  Crown,
+} from "lucide-react";
 import {
   CourseFilters,
   CourseHeader,
@@ -127,7 +134,7 @@ export default function CoursesPage() {
     [CourseSubscriptionType.FREE]: {
       name: "Free Plan",
       description: "Perfect for getting started with basic coding concepts",
-      icon: <Sparkles className="h-5 w-5" />,
+      icon: <BookOpen className="h-5 w-5" />,
       color: "text-primary",
       badgeVariant: "secondary" as const,
     },
@@ -157,7 +164,7 @@ export default function CoursesPage() {
     unknown: {
       name: "Other",
       description: "Additional courses",
-      icon: <Sparkles className="h-5 w-5" />,
+      icon: <Layers className="h-5 w-5" />,
       color: "text-muted-foreground",
       badgeVariant: "secondary" as const,
     },
@@ -201,43 +208,49 @@ export default function CoursesPage() {
     }
   }, [session?.user?.id, session?.user?.roles]);
 
-  // Fetch lesson data for all courses
+  // Derive student counts immediately; fetch durations in parallel (not sequential N+1).
   useEffect(() => {
-    const fetchCourseData = async () => {
-      if (!activeCourses || activeCourses.length === 0) return;
+    if (!activeCourses || activeCourses.length === 0) return;
 
+    const students: Record<string, number> = {};
+    for (const course of activeCourses) {
+      students[course._id] = Array.isArray((course as any).students)
+        ? ((course as any).students as string[]).length
+        : 0;
+    }
+    setCourseStudents(students);
+
+    let cancelled = false;
+    const fetchDurations = async () => {
+      const entries = await Promise.all(
+        activeCourses.map(async (course) => {
+          try {
+            const lessons = await lessonApi.getLessonsByCourse(course._id);
+            const totalMinutes = lessons.reduce(
+              (sum, lesson) => sum + (Number(lesson.duration) || 0),
+              0
+            );
+            const hours =
+              totalMinutes > 0
+                ? Math.max(1, Math.round(totalMinutes / 60))
+                : 2;
+            return [course._id, hours] as const;
+          } catch (error) {
+            console.warn("Failed to fetch data for course:", course._id, error);
+            return [course._id, 2] as const;
+          }
+        })
+      );
+      if (cancelled) return;
       const durations: Record<string, number> = {};
-      const students: Record<string, number> = {};
-
-      for (const course of activeCourses) {
-        try {
-          // Fetch lesson data for duration
-          const lessons = await lessonApi.getLessonsByCourse(course._id);
-          const totalMinutes = lessons.reduce(
-            (sum, lesson) => sum + (Number(lesson.duration) || 0),
-            0
-          );
-          const hours =
-            totalMinutes > 0 ? Math.max(1, Math.round(totalMinutes / 60)) : 2;
-          durations[course._id] = hours;
-
-          // Calculate students count
-          const count = Array.isArray((course as any).students)
-            ? ((course as any).students as string[]).length
-            : 0;
-          students[course._id] = count;
-        } catch (error) {
-          console.warn("Failed to fetch data for course:", course._id, error);
-          durations[course._id] = 2;
-          students[course._id] = 0;
-        }
-      }
-
+      for (const [id, hours] of entries) durations[id] = hours;
       setCourseDurations(durations);
-      setCourseStudents(students);
     };
 
-    fetchCourseData();
+    void fetchDurations();
+    return () => {
+      cancelled = true;
+    };
   }, [activeCourses]);
 
   // Resolve per-course enrollment status using silent progress check

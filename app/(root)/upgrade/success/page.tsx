@@ -13,7 +13,7 @@ import {
   Crown,
   Globe,
   Smartphone,
-  Sparkles,
+  PartyPopper,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -221,7 +221,7 @@ function UpgradeSuccessContent() {
             </motion.div>
 
             <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-3 justify-center">
-              <Sparkles className="h-8 w-8 text-primary" />
+              <PartyPopper className="h-8 w-8 text-primary" />
               Payment Successful!
             </h1>
             <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">

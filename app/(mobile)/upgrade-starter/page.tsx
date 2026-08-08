@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, Smartphone, ArrowRight, Lock, Sparkles } from "lucide-react";
+import { Check, Smartphone, ArrowRight, Lock, Rocket } from "lucide-react";
 import { usePayment } from "@/hooks/use-payment";
 import { useSession } from "@/lib/auth-client";
 import {
@@ -281,7 +281,7 @@ export default function UpgradeStarterPage() {
               onClick={handleChoosePlan}
               disabled={paymentLoading || loadingChildren}
             >
-              <Sparkles className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+              <Rocket className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
               Upgrade to Starter Plan
               <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>

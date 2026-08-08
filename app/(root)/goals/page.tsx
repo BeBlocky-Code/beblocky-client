@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Target, Sparkles, Calendar } from "lucide-react";
+import { Target, Compass, Medal, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function GoalsPage() {
@@ -39,7 +39,7 @@ export default function GoalsPage() {
             <CardHeader className="text-center">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Sparkles className="h-8 w-8" />
+                  <Compass className="h-8 w-8" />
                 </div>
               </div>
               <CardTitle className="text-2xl font-bold text-primary">
@@ -91,7 +91,7 @@ export default function GoalsPage() {
                   transition={{ delay: 0.5 }}
                 >
                   <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Sparkles className="h-6 w-6" />
+                    <Medal className="h-6 w-6" />
                   </div>
                   <h3 className="font-semibold mb-2">Achievement Rewards</h3>
                   <p className="text-sm text-muted-foreground">
