@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, BookOpen, ArrowLeft } from "lucide-react";
 import { fetchBundle } from "@/lib/api/bundle";
 import type { BundleResponse, BundleCourse } from "@/lib/api/bundle";
+import { BundleDetailSkeleton } from "@/components/skeletons";
 
 function isPopulatedCourse(c: BundleCourse | string): c is BundleCourse {
   return typeof c === "object" && c !== null && "_id" in c;
@@ -29,13 +30,7 @@ export default function BundleDetailPage() {
   }, [bundleId]);
 
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center py-12 text-muted-foreground">
-          Loading…
-        </div>
-      </div>
-    );
+    return <BundleDetailSkeleton />;
   }
 
   if (!bundle) {

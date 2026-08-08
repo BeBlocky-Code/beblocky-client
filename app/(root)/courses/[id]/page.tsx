@@ -1,59 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ArrowLeft, Loader2 } from "lucide-react";
-import type { ICourse } from "@/types/course";
-import { courseApi } from "@/lib/api/course";
+import { BookOpen, ArrowLeft } from "lucide-react";
 import { EnrollmentDialog } from "@/components/dialogs/enrollment-dialog";
+import { CourseDetailSkeleton } from "@/components/skeletons";
+import { useCourse } from "@/lib/hooks";
+import { useState } from "react";
 
 export default function CourseDetailPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = params?.id as string | undefined;
-
-  const [course, setCourse] = useState<ICourse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: course, isLoading: loading } = useCourse(courseId);
   const [enrollmentOpen, setEnrollmentOpen] = useState(false);
 
-  useEffect(() => {
-    if (!courseId) return;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await courseApi.fetchCourseById(courseId);
-        if (!cancelled) {
-          setCourse(data);
-        }
-      } catch (error) {
-        console.error("Failed to load course", error);
-        if (!cancelled) {
-          setCourse(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [courseId]);
-
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading course...</span>
-        </div>
-      </div>
-    );
+    return <CourseDetailSkeleton />;
   }
 
   if (!course || !courseId) {
@@ -86,35 +50,26 @@ export default function CourseDetailPage() {
         <Card className="shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <BookOpen className="h-5 w-5 text-primary" />
-              </span>
-              <span className="truncate">{course.courseTitle}</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              {course.courseTitle}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {course.courseDescription}
-            </p>
-
+            <p className="text-muted-foreground">{course.courseDescription}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
               <div>
-                <div className="font-medium">Language</div>
-                <div className="text-muted-foreground">
-                  {course.courseLanguage || "English"}
-                </div>
+                <p className="text-muted-foreground">Language</p>
+                <p className="font-medium">{course.courseLanguage}</p>
               </div>
               <div>
-                <div className="font-medium">Plan</div>
-                <div className="text-muted-foreground">
-                  {course.subType ?? "Free"}
-                </div>
+                <p className="text-muted-foreground">Plan</p>
+                <p className="font-medium">{course.subType}</p>
               </div>
               <div>
-                <div className="font-medium">Status</div>
-                <div className="text-muted-foreground">
-                  {course.status ?? "Active"}
-                </div>
+                <p className="text-muted-foreground">Status</p>
+                <p className="font-medium">{course.status}</p>
               </div>
             </div>
           </CardContent>
@@ -126,17 +81,9 @@ export default function CourseDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Enroll in this course and we’ll take you straight into the Beblocky
-              IDE to start learning.
+              Enroll in this course to start coding in the IDE.
             </p>
-            <Button
-              className="w-full gap-2"
-              size="lg"
-              onClick={() => setEnrollmentOpen(true)}
-            >
-              <BookOpen className="h-4 w-4" />
-              Learn in IDE
-            </Button>
+            <Button onClick={() => setEnrollmentOpen(true)}>Enroll</Button>
           </CardContent>
         </Card>
       </div>
@@ -145,11 +92,7 @@ export default function CourseDetailPage() {
         course={course}
         isOpen={enrollmentOpen}
         onClose={() => setEnrollmentOpen(false)}
-        onEnrollmentSuccess={() => {
-          // no-op; EnrollmentDialog already navigates to IDE
-        }}
       />
     </div>
   );
 }
-

@@ -2,12 +2,6 @@
 
 import { useState, useMemo, useEffect } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   BookOpen,
   Layers,
   Smartphone,
@@ -27,27 +21,64 @@ import { BundlesShowcase } from "@/components/courses/bundles-showcase";
 import { CourseDetailsDialog } from "@/components/dialogs/course-detail";
 import { EnrollmentDialog } from "@/components/dialogs/enrollment-dialog";
 import type { ICourse } from "@/types/course";
-import { CourseSubscriptionType } from "@/types/course";
-import { useCourses } from "@/hooks/use-courses";
-import { Button } from "@/components/ui/button";
+import { CourseSubscriptionType, CourseStatus } from "@/types/course";
+import {
+  useCourses,
+  useMySubscription,
+  useStudentByUserId,
+  useStudentProgress,
+} from "@/lib/hooks";
 import { useSession } from "@/lib/auth-client";
-import { LanguageLogo } from "@/components/shared/language-logos";
 import { useRouter } from "next/navigation";
-import { useSubscription } from "@/hooks/use-subscription";
-import { CourseStatus } from "@/types/course";
-import { lessonApi } from "@/lib/api/lesson";
 import { canAccessCourse } from "@/lib/utils/subscription-hierarchy";
-import { studentApi } from "@/lib/api/student";
-import { progressApi } from "@/lib/api/progress";
-import { courseApi } from "@/lib/api/course";
-import { toast } from "sonner";
 import { getIdeLearnUrl } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+
+function courseIdFromProgress(progress: { courseId: unknown }): string | null {
+  const raw = progress.courseId;
+  if (typeof raw === "string") return raw;
+  if (raw && typeof raw === "object" && "_id" in raw) {
+    return String((raw as { _id: string })._id);
+  }
+  return null;
+}
+
+/** Rough hours from lesson id count — avoids N+1 lesson duration fetches. */
+function estimateDurationHours(course: ICourse): number {
+  const count = Array.isArray(course.lessons) ? course.lessons.length : 0;
+  return count > 0 ? Math.max(1, count) : 2;
+}
 
 export default function CoursesPage() {
   const { data: session, isPending: sessionLoading } = useSession();
-  const { courses, loading, error, refetch } = useCourses();
-  const { subscription } = useSubscription();
+  const {
+    data: courses = [],
+    isLoading: coursesLoading,
+    error: coursesError,
+    refetch,
+  } = useCourses();
+  const { subscription } = useMySubscription();
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const userId = session?.user?.id;
+  const userRole = session?.user?.roles?.[0] ?? "student";
+  const isStudent = userRole === "student";
+
+  const studentQuery = useStudentByUserId(userId, isStudent);
+  const studentId = studentQuery.data?._id;
+  const progressQuery = useStudentProgress(studentId, isStudent);
+
+  const loading =
+    sessionLoading ||
+    coursesLoading ||
+    (isStudent && (studentQuery.isLoading || progressQuery.isLoading));
+  const error = coursesError
+    ? coursesError instanceof Error
+      ? coursesError.message
+      : "Failed to fetch courses"
+    : null;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("all");
@@ -59,51 +90,61 @@ export default function CoursesPage() {
   );
   const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
   const [expandedPlans, setExpandedPlans] = useState<string[]>([]);
-  const [courseDurations, setCourseDurations] = useState<
-    Record<string, number>
-  >({});
-  const [courseStudents, setCourseStudents] = useState<Record<string, number>>(
-    {}
-  );
-  const [userRole, setUserRole] = useState<string>("student");
-  const [studentId, setStudentId] = useState<string | null>(null);
-  const [enrollmentMap, setEnrollmentMap] = useState<Record<string, boolean>>(
-    {}
-  );
 
-  // Determine user type based on role
   const userType: "student" | "parent" =
     userRole === "parent" ? "parent" : "student";
 
-  // Filter only active courses
-  const activeCourses = useMemo(() => {
-    if (!courses) return [];
-    return courses.filter((course) => course.status === CourseStatus.ACTIVE);
-  }, [courses]);
+  const activeCourses = useMemo(
+    () => courses.filter((course) => course.status === CourseStatus.ACTIVE),
+    [courses]
+  );
 
-  // Group courses by plan (all active courses)
-  const coursesByPlan = useMemo(() => {
-    if (!activeCourses) return {};
-
-    const grouped = activeCourses.reduce(
-      (acc: Record<string, ICourse[]>, course) => {
-        const plan = course.subType || CourseSubscriptionType.FREE;
-        if (!acc[plan]) {
-          acc[plan] = [];
-        }
-        acc[plan].push(course);
-        return acc;
-      },
-      {}
-    );
-
-    return grouped;
+  const courseDurations = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const course of activeCourses) {
+      map[course._id] = estimateDurationHours(course);
+    }
+    return map;
   }, [activeCourses]);
 
-  // Filter courses within each plan
+  const courseStudents = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const course of activeCourses) {
+      map[course._id] = Array.isArray(course.students)
+        ? course.students.length
+        : 0;
+    }
+    return map;
+  }, [activeCourses]);
+
+  const enrollmentMap = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    const enrolledIds = new Set<string>();
+
+    for (const id of studentQuery.data?.enrolledCourses ?? []) {
+      enrolledIds.add(String(id));
+    }
+    for (const progress of progressQuery.data ?? []) {
+      const id = courseIdFromProgress(progress);
+      if (id) enrolledIds.add(id);
+    }
+    for (const course of activeCourses) {
+      map[course._id] = enrolledIds.has(course._id);
+    }
+    return map;
+  }, [activeCourses, progressQuery.data, studentQuery.data?.enrolledCourses]);
+
+  const coursesByPlan = useMemo(() => {
+    return activeCourses.reduce((acc: Record<string, ICourse[]>, course) => {
+      const plan = course.subType || CourseSubscriptionType.FREE;
+      if (!acc[plan]) acc[plan] = [];
+      acc[plan].push(course);
+      return acc;
+    }, {});
+  }, [activeCourses]);
+
   const filteredCoursesByPlan = useMemo(() => {
     const filtered: Record<string, ICourse[]> = {};
-
     Object.entries(coursesByPlan).forEach(([plan, planCourses]) => {
       const filteredCourses = planCourses.filter((course) => {
         const matchesSearch =
@@ -118,15 +159,10 @@ export default function CoursesPage() {
           course.courseLanguage === selectedLanguage;
         const matchesPlan =
           selectedPlan === "all" || course.subType === selectedPlan;
-
         return matchesSearch && matchesLanguage && matchesPlan;
       });
-
-      if (filteredCourses.length > 0) {
-        filtered[plan] = filteredCourses;
-      }
+      if (filteredCourses.length > 0) filtered[plan] = filteredCourses;
     });
-
     return filtered;
   }, [coursesByPlan, searchTerm, selectedLanguage, selectedPlan]);
 
@@ -160,7 +196,6 @@ export default function CoursesPage() {
       color: "text-primary",
       badgeVariant: "default" as const,
     },
-    // Add fallback for any unknown plan types
     unknown: {
       name: "Other",
       description: "Additional courses",
@@ -183,99 +218,12 @@ export default function CoursesPage() {
     );
   };
 
-  // Initialize expanded plans with all available plans
   useEffect(() => {
     const availablePlans = Object.keys(coursesByPlan);
     if (availablePlans.length > 0) {
       setExpandedPlans(availablePlans);
     }
   }, [coursesByPlan]);
-
-  // Use session for role; resolve student id for enrollment checks
-  useEffect(() => {
-    if (!session?.user?.id) return;
-
-    const role = session.user.roles?.[0] ?? "student";
-    setUserRole(role);
-
-    if (role === "student") {
-      studentApi
-        .getStudentByUserId(session.user.id)
-        .then((student) => setStudentId(student._id))
-        .catch(() => setStudentId(null));
-    } else {
-      setStudentId(null);
-    }
-  }, [session?.user?.id, session?.user?.roles]);
-
-  // Derive student counts immediately; fetch durations in parallel (not sequential N+1).
-  useEffect(() => {
-    if (!activeCourses || activeCourses.length === 0) return;
-
-    const students: Record<string, number> = {};
-    for (const course of activeCourses) {
-      students[course._id] = Array.isArray((course as any).students)
-        ? ((course as any).students as string[]).length
-        : 0;
-    }
-    setCourseStudents(students);
-
-    let cancelled = false;
-    const fetchDurations = async () => {
-      const entries = await Promise.all(
-        activeCourses.map(async (course) => {
-          try {
-            const lessons = await lessonApi.getLessonsByCourse(course._id);
-            const totalMinutes = lessons.reduce(
-              (sum, lesson) => sum + (Number(lesson.duration) || 0),
-              0
-            );
-            const hours =
-              totalMinutes > 0
-                ? Math.max(1, Math.round(totalMinutes / 60))
-                : 2;
-            return [course._id, hours] as const;
-          } catch (error) {
-            console.warn("Failed to fetch data for course:", course._id, error);
-            return [course._id, 2] as const;
-          }
-        })
-      );
-      if (cancelled) return;
-      const durations: Record<string, number> = {};
-      for (const [id, hours] of entries) durations[id] = hours;
-      setCourseDurations(durations);
-    };
-
-    void fetchDurations();
-    return () => {
-      cancelled = true;
-    };
-  }, [activeCourses]);
-
-  // Resolve per-course enrollment status using silent progress check
-  useEffect(() => {
-    const resolveEnrollment = async () => {
-      if (!studentId || !activeCourses || activeCourses.length === 0) return;
-      const entries = await Promise.all(
-        activeCourses.map(async (course) => {
-          try {
-            const progress = await progressApi.getStudentCourseProgressSilently(
-              studentId,
-              course._id
-            );
-            return [course._id, !!progress] as const;
-          } catch {
-            return [course._id, false] as const;
-          }
-        })
-      );
-      const map: Record<string, boolean> = {};
-      for (const [id, enrolled] of entries) map[id] = enrolled;
-      setEnrollmentMap(map);
-    };
-    resolveEnrollment();
-  }, [studentId, activeCourses]);
 
   const handleCourseClick = (course: ICourse) => {
     setSelectedCourse(course);
@@ -287,38 +235,20 @@ export default function CoursesPage() {
     window.open(getIdeLearnUrl(courseId), "_blank");
   };
 
-  const handleEnroll = async (courseId: string) => {
+  const handleEnroll = (courseId: string) => {
     const course = activeCourses.find((c) => c._id === courseId);
     if (!course) return;
 
-    // If we already know it's enrolled, go straight to IDE
     if (enrollmentMap[courseId]) {
       openIdeForCourse(courseId);
       return;
     }
 
-    // Double check silently in case the map hasn't resolved yet
-    if (studentId) {
-      try {
-        const progress = await progressApi.getStudentCourseProgressSilently(
-          studentId,
-          courseId
-        );
-        if (progress) {
-          setEnrollmentMap((prev) => ({ ...prev, [courseId]: true }));
-          openIdeForCourse(courseId);
-          return;
-        }
-      } catch {}
-    }
-
-    // Not enrolled yet – open enrollment dialog
     setEnrollmentCourse(course);
     setIsEnrollmentDialogOpen(true);
   };
 
-  const handleAddToPlan = (courseId: string) => {
-    // Redirect to upgrade page
+  const handleAddToPlan = (_courseId?: string) => {
     router.push("/upgrade");
   };
 
@@ -328,10 +258,11 @@ export default function CoursesPage() {
         loading={loading}
         sessionLoading={sessionLoading}
         error={error}
-        onRetry={refetch}
+        onRetry={() => {
+          void refetch();
+        }}
       />
 
-      {/* Content - Only show when not loading and no error */}
       {!sessionLoading && !loading && !error && (
         <div className="space-y-4 sm:space-y-6">
           <CourseHeader />
@@ -347,14 +278,13 @@ export default function CoursesPage() {
 
           <CourseResultsCount
             filteredCount={Object.values(filteredCoursesByPlan).flat().length}
-            totalCount={activeCourses?.length || 0}
+            totalCount={activeCourses.length}
             loading={loading}
             error={error}
           />
 
           <BundlesShowcase />
 
-          {/* Courses by Plan */}
           <div className="space-y-6 sm:space-y-8">
             {Object.entries(filteredCoursesByPlan).map(
               ([plan, planCourses]) => {
@@ -386,23 +316,18 @@ export default function CoursesPage() {
             )}
           </div>
 
-          {/* Empty States */}
           {Object.keys(filteredCoursesByPlan).length === 0 &&
-            courses &&
             courses.length > 0 && <CourseEmptyState type="no-results" />}
 
-          {!loading &&
-            !error &&
-            (!activeCourses || activeCourses.length === 0) && (
-              <CourseEmptyState
-                type="no-courses"
-                onUpgrade={() => router.push("/upgrade")}
-              />
-            )}
+          {!loading && !error && activeCourses.length === 0 && (
+            <CourseEmptyState
+              type="no-courses"
+              onUpgrade={() => router.push("/upgrade")}
+            />
+          )}
         </div>
       )}
 
-      {/* Course Details Dialog */}
       <CourseDetailsDialog
         course={selectedCourse}
         isOpen={isDialogOpen}
@@ -412,7 +337,6 @@ export default function CoursesPage() {
         onAddToPlan={handleAddToPlan}
       />
 
-      {/* Enrollment Dialog */}
       <EnrollmentDialog
         course={enrollmentCourse}
         isOpen={isEnrollmentDialogOpen}
@@ -421,11 +345,15 @@ export default function CoursesPage() {
           setEnrollmentCourse(null);
         }}
         onEnrollmentSuccess={() => {
-          if (enrollmentCourse) {
-            setEnrollmentMap((prev) => ({
-              ...prev,
-              [enrollmentCourse._id]: true,
-            }));
+          if (studentId) {
+            void queryClient.invalidateQueries({
+              queryKey: queryKeys.progress.byStudent(studentId),
+            });
+          }
+          if (userId) {
+            void queryClient.invalidateQueries({
+              queryKey: queryKeys.students.byUserId(userId),
+            });
           }
         }}
       />

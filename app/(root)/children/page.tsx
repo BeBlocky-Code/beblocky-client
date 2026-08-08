@@ -1,116 +1,78 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useMemo, useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { ChildrenList } from "@/components/children/children-list";
 import { AddChildDialog } from "@/components/children/add-child-dialog";
 import { ManageCoursesDialog } from "@/components/children/manage-courses-dialog";
 import { childrenApi } from "@/lib/api/children";
-import { parentApi } from "@/lib/api/parent";
-import { courseApi } from "@/lib/api/course";
-import { userApi } from "@/lib/api/user";
 import { useToast } from "@/hooks/use-toast";
-import type { ICourse } from "@/types/course";
-import type { IStudent, ICreateStudentDto } from "@/types/student";
-import type { IStudentResponse } from "@/lib/api/student";
+import { ChildrenPageSkeleton } from "@/components/skeletons";
+import {
+  useCourses,
+  useParentByUserId,
+  useParentChildren,
+} from "@/lib/hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import type { IStudent } from "@/types/student";
 
-// Extended type for API responses that include _id
 type IStudentWithId = IStudent & { _id: string };
 
 export default function ChildrenPage() {
-  const { data: session } = useSession();
-  const [children, setChildren] = useState<IStudentWithId[]>([]);
-  const [availableCourses, setAvailableCourses] = useState<ICourse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: session, isPending: sessionPending } = useSession();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const userId = session?.user?.id;
+
+  const parentQuery = useParentByUserId(userId);
+  const parentId = parentQuery.data?._id;
+  const childrenQuery = useParentChildren(parentId);
+  const coursesQuery = useCourses();
+
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [manageCoursesDialog, setManageCoursesDialog] = useState<{
     open: boolean;
     child: IStudent | null;
   }>({ open: false, child: null });
-  const { toast } = useToast();
 
-  const loadData = useCallback(async () => {
-    const userId = session?.user?.id;
-    if (!userId) return;
-    try {
-      setLoading(true);
-      // Get the actual parent ID from the session
-      const parentData = await parentApi.getParentByUserId(userId);
-      const [childrenData, coursesData] = await Promise.all([
-        childrenApi.getChildrenByParent(parentData._id),
-        courseApi.fetchAllCourses(),
-      ]);
-      setChildren(childrenData as IStudentWithId[]);
-      setAvailableCourses(coursesData);
-    } catch (error: unknown) {
-      console.error("Children API Error:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+  const children = (childrenQuery.data ?? []) as IStudentWithId[];
+  const availableCourses = coursesQuery.data ?? [];
 
-      // Handle 404 gracefully - no children data available yet
-      if (errorMessage.includes("404") || errorMessage.includes("Not Found")) {
-        setChildren([]);
-        toast({
-          title: "No Children Found",
-          description:
-            "You haven&apos;t added any children yet. Add your first child to get started.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to load data. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [session, toast]);
+  const loading =
+    sessionPending ||
+    parentQuery.isLoading ||
+    childrenQuery.isLoading ||
+    coursesQuery.isLoading;
 
-  useEffect(() => {
-    if (session?.user?.id) {
-      loadData();
-    }
-  }, [session?.user?.id, loadData]);
-
-  const handleAddChild = async (data: ICreateStudentDto) => {
-    try {
-      const newChild = await childrenApi.createChild(data);
-      setChildren([...children, newChild as IStudentWithId]);
-      setAddDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Child has been added successfully!",
-      });
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to add child. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const invalidateChildren = () => {
+    if (!parentId) return;
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.parents.children(parentId),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.parents.detail(parentId),
+    });
   };
 
   const handleDeleteChild = async (childId: string) => {
     try {
       await childrenApi.deleteChild(childId);
-      setChildren(children.filter((child) => child._id !== childId));
+      invalidateChildren();
       toast({
         title: "Success",
-        description: "Child has been removed successfully.",
+        description: "Child has been removed.",
       });
     } catch {
       toast({
         title: "Error",
-        description: "Failed to remove child. Please try again.",
+        description: "Failed to delete child. Please try again.",
         variant: "destructive",
       });
     }
   };
 
   const handleEditChild = (child: IStudent) => {
-    // TODO: Implement edit functionality
     console.log("Edit child:", child);
   };
 
@@ -120,15 +82,8 @@ export default function ChildrenPage() {
 
   const handleAddCourse = async (childId: string, courseId: string) => {
     try {
-      const updatedChild = await childrenApi.addCourseToChild(
-        childId,
-        courseId
-      );
-      setChildren(
-        children.map((child) =>
-          child._id === childId ? (updatedChild as IStudentWithId) : child
-        )
-      );
+      await childrenApi.addCourseToChild(childId, courseId);
+      invalidateChildren();
       toast({
         title: "Success",
         description: "Course added successfully!",
@@ -144,20 +99,13 @@ export default function ChildrenPage() {
 
   const handleRemoveCourse = async (childId: string, courseId: string) => {
     try {
-      const updatedChild = await childrenApi.removeCourseFromChild(
-        childId,
-        courseId
-      );
-      setChildren(
-        children.map((child) =>
-          child._id === childId ? (updatedChild as IStudentWithId) : child
-        )
-      );
+      await childrenApi.removeCourseFromChild(childId, courseId);
+      invalidateChildren();
       toast({
         title: "Success",
         description: "Course removed successfully!",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to remove course. Please try again.",
@@ -166,23 +114,21 @@ export default function ChildrenPage() {
     }
   };
 
+  const parentNotFound = useMemo(
+    () =>
+      parentQuery.isError &&
+      String(parentQuery.error).toLowerCase().includes("404"),
+    [parentQuery.error, parentQuery.isError]
+  );
+
   if (loading) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading children...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <ChildrenPageSkeleton />;
   }
 
   return (
     <div className="container mx-auto p-6">
       <ChildrenList
-        studentList={children}
+        studentList={parentNotFound ? [] : children}
         courses={availableCourses}
         onAddChild={() => setAddDialogOpen(true)}
         onEditChild={handleEditChild}
@@ -193,7 +139,8 @@ export default function ChildrenPage() {
       <AddChildDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
-        onSuccess={loadData}
+        parentId={parentId}
+        onSuccess={invalidateChildren}
       />
 
       <ManageCoursesDialog

@@ -25,18 +25,18 @@ export function makeQueryClient() {
         // Allows instant data on back-navigation
         gcTime: 30 * 60 * 1000,
 
-        // Refetch when window regains focus (user returns to tab)
-        refetchOnWindowFocus: true,
+        // Refetch when window regains focus only if data is stale
+        refetchOnWindowFocus: false,
 
         // Don't refetch on mount if data is still fresh
-        refetchOnMount: true,
+        refetchOnMount: false,
 
         // Retry failed requests 2 times with exponential backoff
         retry: 2,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
 
         // Don't refetch on reconnect by default (reduces unnecessary requests)
-        refetchOnReconnect: "always",
+        refetchOnReconnect: false,
       },
       mutations: {
         // Retry mutations once on failure
