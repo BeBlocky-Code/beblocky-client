@@ -7,7 +7,7 @@ import {
   Users,
   Shield,
   Award,
-  Sparkles,
+  Gift,
   CreditCard,
   Clock,
   Mail,
@@ -37,7 +37,7 @@ export function FAQSection() {
       question: "Is there a free trial?",
       answer:
         "Yes! Start with our free plan to explore the platform. You can upgrade anytime to unlock more features.",
-      icon: Sparkles,
+      icon: Gift,
     },
     {
       question: "What payment methods do you accept?",

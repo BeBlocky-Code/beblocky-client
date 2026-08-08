@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import { Sparkles, Smartphone, Globe, Crown } from "lucide-react";
 
 interface PricingPlan {
   id: string;

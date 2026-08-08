@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 
 interface CourseHeaderProps {
   title?: string;
@@ -22,7 +22,7 @@ export function CourseHeader({
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground sm:gap-3 sm:text-3xl md:text-4xl">
-            <Sparkles className="h-6 w-6 text-primary sm:h-8 sm:w-8" />
+            <GraduationCap className="h-6 w-6 text-primary sm:h-8 sm:w-8" />
             {title}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground sm:text-base">

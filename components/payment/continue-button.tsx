@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Lock, Sparkles, ArrowRight } from "lucide-react";
+import { Lock, CreditCard, ArrowRight } from "lucide-react";
 import { PaymentProvider } from "./payment-card";
 
 interface ContinueButtonProps {
@@ -61,7 +61,7 @@ const ContinueButton: React.FC<ContinueButtonProps> = ({
             exit={{ opacity: 0 }}
             className="flex items-center gap-3"
           >
-            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform" />
+            <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform" />
             <span className="text-sm sm:text-base">
               Continue with{" "}
               {selectedProvider === PaymentProvider.ARIFPAY

@@ -22,7 +22,7 @@ import {
   Coins,
   TrendingUp,
   Users,
-  Sparkles,
+  Clock,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ICourse } from "@/types/course";
@@ -229,7 +229,7 @@ export function ChildrenList({
                       <span>{enrolledCourses.length} courses</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-purple-500" />
+                      <Clock className="h-4 w-4 text-purple-500" />
                       <span>{formatTimeSpent(child.totalTimeSpent)}</span>
                     </div>
                   </div>

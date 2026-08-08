@@ -112,7 +112,7 @@ export function AppSidebar({ items }: Props) {
           disabled={isMobile}
         >
           <motion.div
-            animate={{ rotate: isCollapsed ? 0 : 180 }}
+            animate={{ rotate: isCollapsed ? 180 : 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <ChevronLeft className="h-4 w-4 text-muted-foreground" />

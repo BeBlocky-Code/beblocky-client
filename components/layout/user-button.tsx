@@ -141,7 +141,11 @@ export function UserButton({ isCollapsed = false }: UserButtonProps) {
                 <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 z-10">
                   <Badge
                     variant={subscriptionInfo.variant}
-                    className="text-xs px-1.5 py-0.5 flex items-center gap-1"
+                    className={cn(
+                      "text-xs px-1.5 py-0.5 flex items-center gap-1 shadow-sm",
+                      subscriptionInfo.variant === "outline" &&
+                        "bg-card text-foreground border-border"
+                    )}
                   >
                     {subscriptionInfo.icon}
                     {subscriptionInfo.name === "Pro Bundle"
