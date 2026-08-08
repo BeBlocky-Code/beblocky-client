@@ -21,37 +21,38 @@ export interface BundleResponse {
 export async function fetchBundles(
   publishedOnly = true
 ): Promise<BundleResponse[]> {
-  if (!API_BASE_URL) return [];
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/bundles`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    });
-    if (!res.ok) return [];
-    const list = (await res.json()) as BundleResponse[];
-    if (publishedOnly) {
-      return list.filter((b) => b.isPublished);
-    }
-    return list;
-  } catch {
-    return [];
+  if (!API_BASE_URL) {
+    throw new Error("API URL is not configured");
   }
+
+  const res = await fetch(`${API_BASE_URL}/bundles`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch bundles: ${res.status}`);
+  }
+  const list = (await res.json()) as BundleResponse[];
+  if (publishedOnly) {
+    return list.filter((b) => b.isPublished);
+  }
+  return list;
 }
 
 export async function fetchBundle(id: string): Promise<BundleResponse | null> {
-  if (!API_BASE_URL) return null;
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/bundles/${id}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as BundleResponse;
-  } catch {
-    return null;
+  if (!API_BASE_URL) {
+    throw new Error("API URL is not configured");
   }
+
+  const res = await fetch(`${API_BASE_URL}/bundles/${id}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(`Failed to fetch bundle: ${res.status}`);
+  }
+  return (await res.json()) as BundleResponse;
 }

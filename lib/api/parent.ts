@@ -1,7 +1,6 @@
 import type { IStudent } from "@/types/student";
 import type { IAddChildDto } from "./children";
-
-const defaultHeaders = { "Content-Type": "application/json" };
+import { getApiAuthHeaders } from "@/lib/auth-client";
 
 export interface CreateParentFromUserDto {
   userId: string;
@@ -24,192 +23,83 @@ export interface IParent {
   updatedAt: string;
 }
 
+async function parentFetch<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const url = `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`;
+  const authHeaders = await getApiAuthHeaders();
+  const response = await fetch(url, {
+    ...options,
+    credentials: "include",
+    headers: {
+      ...authHeaders,
+      ...((options.headers as Record<string, string>) ?? {}),
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `API Error: ${response.status} - ${response.statusText} - ${errorText}`,
+    );
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return response.json();
+}
+
 class ParentApi {
   async createParentFromUser(userId: string): Promise<IParent> {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/from-user`;
-
-    const response = await fetch(url, {
+    return parentFetch<IParent>("/parents/from-user", {
       method: "POST",
-      headers: defaultHeaders,
-      credentials: "include",
       body: JSON.stringify({ userId }),
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ [Parent API] createParentFromUser failed:", errorText);
-      throw new Error(
-        `API Error: ${response.status} - ${response.statusText} - ${errorText}`
-      );
-    }
-
-    const data = await response.json();
-    console.log("✅ [Parent API] createParentFromUser success:", data);
-    return data;
   }
 
   async getParent(parentId: string): Promise<IParent> {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}`;
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: defaultHeaders,
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `API Error: ${response.status} - ${response.statusText} - ${errorText}`
-      );
-    }
-
-    return response.json();
+    return parentFetch<IParent>(`/parents/${parentId}`);
   }
 
   async getParentByUserId(userId: string): Promise<IParent> {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/user/${userId}`;
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: defaultHeaders,
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `API Error: ${response.status} - ${response.statusText} - ${errorText}`
-      );
-    }
-
-    return response.json();
+    return parentFetch<IParent>(`/parents/user/${userId}`);
   }
 
-  // NEW: GET /parents/:parentId/children - Get children of a parent
   async getChildrenByParent(parentId: string): Promise<IStudent[]> {
-
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}/children`;
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: defaultHeaders,
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `API Error: ${response.status} - ${response.statusText} - ${errorText}`
-      );
-    }
-
-    return response.json();
+    return parentFetch<IStudent[]>(`/parents/${parentId}/children`);
   }
 
-  // NEW: GET /parents/:parentId/with-children - Get parent with populated children
   async getParentWithChildren(parentId: string): Promise<any> {
-
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}/with-children`;
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: defaultHeaders,
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `API Error: ${response.status} - ${response.statusText} - ${errorText}`
-      );
-    }
-
-    return response.json();
+    return parentFetch(`/parents/${parentId}/with-children`);
   }
 
-  // NEW: POST /parents/:parentId/children - Add child to parent
   async addChildToParent(
     parentId: string,
-    childData: IAddChildDto
+    childData: IAddChildDto,
   ): Promise<IStudent> {
-
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}/children`;
-
-    console.log("➡️  [Parent API] POST addChildToParent:", {
-      url,
-      parentId,
-      payload: childData,
-      hasAuth: true,
-    });
-
-    const response = await fetch(url, {
+    return parentFetch<IStudent>(`/parents/${parentId}/children`, {
       method: "POST",
-      headers: defaultHeaders,
-      credentials: "include",
       body: JSON.stringify(childData),
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ [Parent API] addChildToParent failed:", errorText);
-      throw new Error(
-        `API Error: ${response.status} - ${response.statusText} - ${errorText}`
-      );
-    }
-
-    const data = await response.json();
-    console.log("✅ [Parent API] addChildToParent success:", data);
-    return data;
   }
 
-  // NEW: PATCH /parents/:parentId - Update parent information
   async updateParent(
     parentId: string,
-    parentData: Partial<IParent>
+    parentData: Partial<IParent>,
   ): Promise<IParent> {
-
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}`;
-
-    const response = await fetch(url, {
+    return parentFetch<IParent>(`/parents/${parentId}`, {
       method: "PATCH",
-      headers: defaultHeaders,
-      credentials: "include",
       body: JSON.stringify(parentData),
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `API Error: ${response.status} - ${response.statusText} - ${errorText}`
-      );
-    }
-
-    return response.json();
   }
 
-  // DELETE /parents/:parentId - Delete parent profile
   async deleteParent(parentId: string): Promise<void> {
-
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/parents/${parentId}`;
-
-    console.log("➡️  [Parent API] DELETE deleteParent:", { url, parentId });
-
-    const response = await fetch(url, {
+    await parentFetch<void>(`/parents/${parentId}`, {
       method: "DELETE",
-      headers: defaultHeaders,
-      credentials: "include",
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ [Parent API] deleteParent failed:", errorText);
-      throw new Error(
-        `API Error: ${response.status} - ${response.statusText} - ${errorText}`
-      );
-    }
-
-    console.log("✅ [Parent API] deleteParent success");
   }
 }
 

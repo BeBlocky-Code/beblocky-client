@@ -4,6 +4,7 @@ import type {
   IProgressResponse,
   IChildProgressSummary,
 } from "@/types/dashboard-simple";
+import { getApiAuthHeaders } from "@/lib/auth-client";
 
 // API Response types
 export interface ApiResponse<T> {
@@ -22,6 +23,7 @@ async function simpleFetch<T>(
   options?: RequestOptions
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const authHeaders = await getApiAuthHeaders();
 
   if (!options?.suppressErrors) {
     console.log("🌐 [Progress API] Making request to:", url);
@@ -30,11 +32,11 @@ async function simpleFetch<T>(
   try {
     const response = await fetch(url, {
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
       ...options,
+      headers: {
+        ...authHeaders,
+        ...((options?.headers as Record<string, string>) ?? {}),
+      },
     });
 
     if (!options?.suppressErrors) {

@@ -6,6 +6,7 @@ import type {
   ICourseRatingResponse,
   ICourseRatingStats,
 } from "@/types/course";
+import { getApiAuthHeaders } from "@/lib/auth-client";
 
 // API Response types
 export interface ApiResponse<T> {
@@ -21,7 +22,6 @@ export interface CourseContent {
   metadata?: Record<string, unknown>;
 }
 
-// Simple API client for basic operations
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 async function simpleFetch<T>(
@@ -29,33 +29,25 @@ async function simpleFetch<T>(
   options?: RequestInit
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const authHeaders = await getApiAuthHeaders();
 
-  console.log("🌐 [Course API] Making request to:", url);
+  const response = await fetch(url, {
+    credentials: "include",
+    ...options,
+    headers: {
+      ...authHeaders,
+      ...((options?.headers as Record<string, string>) ?? {}),
+    },
+  });
 
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
-      ...options,
-    });
-
-    console.log("🌐 [Course API] Response status:", response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ [Course API] Error Response:", errorText);
-      throw new Error(`API Error: ${response.status} - ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log("✅ [Course API] Success Response:", data);
-    return data;
-  } catch (error) {
-    console.error("❌ [Course API] Request failed:", error);
-    throw error;
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `API Error: ${response.status} - ${response.statusText} - ${errorText}`,
+    );
   }
+
+  return response.json();
 }
 
 // Course API functions
