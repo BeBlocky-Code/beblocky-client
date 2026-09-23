@@ -174,7 +174,7 @@ export class ProgressApi {
     });
   }
 
-  // GET /progress/parent/:parentId/summary - Get parent's children progress summary
+  // GET /progress/parent/:parentId/summary — Parent Standing (no saved code)
   static async getParentProgressSummary(
     parentId: string
   ): Promise<ApiResponse<IChildProgressSummary[]>> {
@@ -184,6 +184,37 @@ export class ProgressApi {
         method: "GET",
       }
     );
+  }
+
+  // GET /progress/parent/:parentId/children/:childLearnerId — one child Standing
+  static async getParentChildStanding(
+    parentId: string,
+    childLearnerId: string
+  ): Promise<ApiResponse<IChildProgressSummary>> {
+    return this.request<IChildProgressSummary>(
+      `/progress/parent/${parentId}/children/${childLearnerId}`,
+      { method: "GET" }
+    );
+  }
+
+  // GET /classes/:classId/standing — Class Standing (parent creators)
+  static async getClassStanding(
+    classId: string
+  ): Promise<
+    ApiResponse<
+      Array<{
+        learnerId: string;
+        standings: Array<{
+          courseId: string;
+          percentage: number;
+          completedLessonCount: number;
+          totalLessons: number;
+          coinsEarned: number;
+        }>;
+      }>
+    >
+  > {
+    return this.request(`/classes/${classId}/standing`, { method: "GET" });
   }
 
   // GET /progress/course/:courseId - Get all progress for a course
@@ -286,6 +317,22 @@ export const progressApi = {
     parentId: string
   ): Promise<IChildProgressSummary[]> {
     const response = await ProgressApi.getParentProgressSummary(parentId);
+    return response.data;
+  },
+
+  async getParentChildStanding(
+    parentId: string,
+    childLearnerId: string
+  ): Promise<IChildProgressSummary> {
+    const response = await ProgressApi.getParentChildStanding(
+      parentId,
+      childLearnerId
+    );
+    return response.data;
+  },
+
+  async getClassStanding(classId: string) {
+    const response = await ProgressApi.getClassStanding(classId);
     return response.data;
   },
 

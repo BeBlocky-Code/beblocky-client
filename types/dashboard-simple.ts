@@ -76,10 +76,18 @@ export interface IProgressResponse {
 }
 
 export interface IChildProgressSummary {
-  child: any; // Using any to avoid import issues
+  childLearnerId?: string;
+  child: any;
   courses: Array<{
-    course: any; // Using any to avoid import issues
-    progress: IProgressResponse;
+    course: any;
+    progress: {
+      percentage: number;
+      completedLessons: number;
+      totalLessons: number;
+      completedSlides?: number;
+      totalSlides?: number;
+      coinsEarned?: number;
+    };
   }>;
 }
 

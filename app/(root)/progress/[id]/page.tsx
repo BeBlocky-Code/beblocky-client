@@ -55,10 +55,7 @@ export default function StudentProgressPage() {
     async (studentId: string) => {
       try {
         setLoading(true);
-        const [studentData, progressData] = await Promise.all([
-          studentApi.getStudent(studentId),
-          progressApi.getStudentProgress(studentId),
-        ]);
+        const studentData = await studentApi.getStudent(studentId);
 
         if (!studentData) {
           toast({
@@ -80,7 +77,52 @@ export default function StudentProgressPage() {
           setUserData({ name: "Student", email: "" });
         }
 
-        setProgress(progressData as any);
+        // Prefer Parent Standing (no saved code) when the Session is a Parent.
+        let standingCourses: Array<{
+          percentage: number;
+          completedLessons: number;
+          totalLessons: number;
+        }> = [];
+        try {
+          const { parentApi } = await import("@/lib/api/parent");
+          if (session?.user?.id) {
+            const parent = await parentApi.getParentByUserId(session.user.id);
+            if (parent?._id) {
+              const summary = await progressApi.getParentChildStanding(
+                parent._id,
+                studentId
+              );
+              standingCourses = (summary.courses ?? []).map((c) => ({
+                percentage: c.progress.percentage,
+                completedLessons: c.progress.completedLessons,
+                totalLessons: c.progress.totalLessons,
+              }));
+            }
+          }
+        } catch {
+          /* fall through to learner progress */
+        }
+
+        if (standingCourses.length === 0) {
+          const progressData = await progressApi.getStudentProgress(studentId);
+          setProgress(progressData as any);
+        } else {
+          const avg =
+            standingCourses.reduce((s, c) => s + c.percentage, 0) /
+            standingCourses.length;
+          setProgress({
+            hoursSpent: Math.round(
+              (studentData.totalTimeSpent ?? 0) / 60
+            ),
+            achievements: [],
+            weeklyData: standingCourses.map((c, i) => ({
+              day: `Course ${i + 1}`,
+              hours: 0,
+              lessons: c.completedLessons,
+            })),
+            overallPercentage: Math.round(avg),
+          } as any);
+        }
       } catch (error) {
         toast({
           title: "Error",
