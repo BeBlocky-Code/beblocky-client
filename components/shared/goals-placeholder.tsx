@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Target, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Target } from "lucide-react";
 import { motion } from "framer-motion";
+import { GOAL_ACCOMPLISH_COINS } from "@/lib/api/goals";
 
 export function GoalsPlaceholder() {
   return (
@@ -12,22 +15,29 @@ export function GoalsPlaceholder() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Your Goals
+            <Target aria-hidden="true" className="h-5 w-5" />
+            Goals
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="h-8 w-8 text-muted-foreground" />
+          <div className="py-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Target aria-hidden="true" className="h-8 w-8" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Setting Goals will come soon</h3>
-            <p className="text-muted-foreground">
-              We&apos;re working on an exciting goals feature to help you track your learning progress!
+            <h3 className="mb-2 text-lg font-semibold">Set a challenge</h3>
+            <p className="text-muted-foreground text-pretty">
+              Finish lessons this week or complete a course. Each one pays{" "}
+              {GOAL_ACCOMPLISH_COINS} coins.
             </p>
+            <Button asChild className="mt-6 gap-2">
+              <Link href="/goals">
+                <Target aria-hidden="true" className="h-4 w-4" />
+                Open goals
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
     </motion.div>
   );
-} 
+}

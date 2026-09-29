@@ -201,15 +201,20 @@ export function ProgressDetailSkeleton() {
   );
 }
 
-/** `/goals` — hero banner then goal cards. */
+/** `/goals` — header banner, set-goal composer, then open + done cards. */
 export function GoalsPageSkeleton() {
   return (
     <PageShellSkeleton>
-      <PageHeaderSkeleton stats={0} actions={0} centered />
-      <StatsGridSkeleton count={4} />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SectionCardSkeleton key={i} rows={3} titleWidth="w-36" />
+      <PageHeaderSkeleton stats={2} actions={0} />
+      <SectionCardSkeleton rows={4} titleWidth="w-28" />
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <ProgressCardSkeleton key={i} />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <ProgressCardSkeleton key={i} />
         ))}
       </div>
     </PageShellSkeleton>

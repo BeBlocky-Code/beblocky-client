@@ -21,6 +21,9 @@ export type GoalSpec =
   | { kind: "lessons-in-window"; lessonCount: number; windowDays: number }
   | { kind: "named-course"; courseId: string };
 
+/** Coins awarded when a Goal is accomplished — matches the API writer. */
+export const GOAL_ACCOMPLISH_COINS = 25;
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 async function goalsFetch<T>(
