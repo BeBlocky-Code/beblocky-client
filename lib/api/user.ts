@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/auth-client";
+import { getApiAuthHeaders } from "@/lib/auth-client";
 
 export interface IUser {
   _id: string;
@@ -17,19 +17,17 @@ const defaultHeaders: Record<string, string> = {
 
 class UserApi {
   private async getAuthHeaders(): Promise<Record<string, string>> {
-    const { data: session } = await getSession();
-    const headers = { ...defaultHeaders };
-    if (session?.token) {
-      headers["Authorization"] = `Bearer ${session.token}`;
-    }
-    return headers;
+    const auth = await getApiAuthHeaders();
+    return { ...defaultHeaders, ...auth };
   }
+
   async getUserById(userId: string): Promise<IUser> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`;
+    const authHeaders = await this.getAuthHeaders();
 
     const response = await fetch(url, {
       method: "GET",
-      headers: defaultHeaders,
+      headers: authHeaders,
       credentials: "include",
     });
 
@@ -45,10 +43,11 @@ class UserApi {
 
   async getUserByEmail(email: string): Promise<IUser> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/users/email/${email}`;
+    const authHeaders = await this.getAuthHeaders();
 
     const response = await fetch(url, {
       method: "GET",
-      headers: defaultHeaders,
+      headers: authHeaders,
       credentials: "include",
     });
 
@@ -71,6 +70,7 @@ class UserApi {
       method: "PATCH",
       headers: authHeaders,
       body: JSON.stringify(userData),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -85,24 +85,20 @@ class UserApi {
 
   async deleteUser(userId: string): Promise<void> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`;
-
-    console.log("➡️  [User API] DELETE deleteUser:", { url, userId });
+    const authHeaders = await this.getAuthHeaders();
 
     const response = await fetch(url, {
       method: "DELETE",
-      headers: defaultHeaders,
+      headers: authHeaders,
       credentials: "include",
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ [User API] deleteUser failed:", errorText);
       throw new Error(
         `API Error: ${response.status} - ${response.statusText} - ${errorText}`
       );
     }
-
-    console.log("✅ [User API] deleteUser success");
   }
 }
 

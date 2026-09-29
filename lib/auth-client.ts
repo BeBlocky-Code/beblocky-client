@@ -46,20 +46,66 @@ async function authFetch<T>(path: string, options: RequestInit = {}): Promise<{ 
   return { data, error, status: res.status };
 }
 
-export async function getSession(): Promise<{ data?: SessionData; error?: { code: string; message: string } }> {
-  const { data: sessionData, error, status } = await authFetch<{ valid?: boolean; user?: { id: string }; token?: string; session?: unknown }>("/auth/session");
-  if (status === 200 && sessionData?.valid && sessionData?.user?.id) {
-    const user: SessionUser = { id: sessionData.user.id };
-    const accountRes = await authFetch<{ name?: string; email?: string; image_url?: string; roles?: string[] }>("/account");
-    if (accountRes.data) {
-      user.name = accountRes.data.name;
-      user.email = accountRes.data.email;
-      user.image = accountRes.data.image_url;
-      user.roles = accountRes.data.roles ?? [];
-    }
-    return { data: { valid: true, user, token: sessionData.token } };
+let cachedSession: {
+  data?: SessionData;
+  error?: { code: string; message: string };
+} | null = null;
+let cachedSessionAt = 0;
+let sessionInflight: Promise<{
+  data?: SessionData;
+  error?: { code: string; message: string };
+}> | null = null;
+const SESSION_TTL_MS = 5 * 60 * 1000;
+
+export function clearSessionCache() {
+  cachedSession = null;
+  cachedSessionAt = 0;
+  sessionInflight = null;
+}
+
+export async function getSession(): Promise<{
+  data?: SessionData;
+  error?: { code: string; message: string };
+}> {
+  if (cachedSession && Date.now() - cachedSessionAt < SESSION_TTL_MS) {
+    return cachedSession;
   }
-  return { data: { valid: false }, error };
+  if (sessionInflight) return sessionInflight;
+
+  sessionInflight = (async () => {
+    const { data: sessionData, error, status } = await authFetch<{
+      valid?: boolean;
+      user?: { id: string };
+      token?: string;
+      session?: unknown;
+    }>("/auth/session");
+    if (status === 200 && sessionData?.valid && sessionData?.user?.id) {
+      const user: SessionUser = { id: sessionData.user.id };
+      const accountRes = await authFetch<{
+        name?: string;
+        email?: string;
+        image_url?: string;
+        roles?: string[];
+      }>("/account");
+      if (accountRes.data) {
+        user.name = accountRes.data.name;
+        user.email = accountRes.data.email;
+        user.image = accountRes.data.image_url;
+        user.roles = accountRes.data.roles ?? [];
+      }
+      const result = {
+        data: { valid: true, user, token: sessionData.token } as SessionData,
+      };
+      cachedSession = result;
+      cachedSessionAt = Date.now();
+      return result;
+    }
+    return { data: { valid: false } as SessionData, error };
+  })().finally(() => {
+    sessionInflight = null;
+  });
+
+  return sessionInflight;
 }
 
 /**
@@ -78,6 +124,7 @@ export async function getApiAuthHeaders(): Promise<Record<string, string>> {
 }
 
 export async function signOut(): Promise<void> {
+  clearSessionCache();
   await authFetch("/auth/logout", { method: "POST" });
 }
 
@@ -96,7 +143,10 @@ export async function updateAccount(input: UpdateAccountInput): Promise<{ data?:
       ...(input.bio != null && { bio: input.bio }),
     }),
   });
-  if (status === 204 || data !== undefined) return { data: null };
+  if (status === 204 || data !== undefined) {
+    clearSessionCache();
+    return { data: null };
+  }
   return { error: error ?? { code: "ERROR", message: "Update failed" } };
 }
 
@@ -105,7 +155,10 @@ export async function assignRole(role: string): Promise<{ data?: null; error?: {
     method: "POST",
     body: JSON.stringify({ role: role.trim().toLowerCase() }),
   });
-  if (status === 204) return { data: null };
+  if (status === 204) {
+    clearSessionCache();
+    return { data: null };
+  }
   return { error: error ?? { code: "ERROR", message: "Assign role failed" } };
 }
 

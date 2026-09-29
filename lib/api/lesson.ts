@@ -1,4 +1,5 @@
 import type { ILesson } from "@/types/lesson";
+import { getApiAuthHeaders } from "@/lib/auth-client";
 
 // API Response types
 export interface ApiResponse<T> {
@@ -15,16 +16,19 @@ async function simpleFetch<T>(
   options?: RequestInit
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const authHeaders = await getApiAuthHeaders();
 
   console.log("🌐 [Lesson API] Making request to:", url);
 
   try {
     const response = await fetch(url, {
+      credentials: "include",
+      ...options,
       headers: {
         "Content-Type": "application/json",
-        ...options?.headers,
+        ...authHeaders,
+        ...((options?.headers as Record<string, string>) ?? {}),
       },
-      ...options,
     });
 
     console.log("🌐 [Lesson API] Response status:", response.status);

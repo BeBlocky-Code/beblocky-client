@@ -51,7 +51,7 @@ function estimateDurationHours(course: ICourse): number {
 }
 
 export default function CoursesPage() {
-  const { data: session, isPending: sessionLoading } = useSession();
+  const { data: session } = useSession();
   const {
     data: courses = [],
     isLoading: coursesLoading,
@@ -70,10 +70,7 @@ export default function CoursesPage() {
   const studentId = studentQuery.data?._id;
   const progressQuery = useStudentProgress(studentId, isStudent);
 
-  const loading =
-    sessionLoading ||
-    coursesLoading ||
-    (isStudent && (studentQuery.isLoading || progressQuery.isLoading));
+  const loading = coursesLoading;
   const error = coursesError
     ? coursesError instanceof Error
       ? coursesError.message
@@ -256,14 +253,13 @@ export default function CoursesPage() {
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
       <CourseLoadingState
         loading={loading}
-        sessionLoading={sessionLoading}
         error={error}
         onRetry={() => {
           void refetch();
         }}
       />
 
-      {!sessionLoading && !loading && !error && (
+      {!loading && !error && (
         <div className="space-y-4 sm:space-y-6">
           <CourseHeader />
 

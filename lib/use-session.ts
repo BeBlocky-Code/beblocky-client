@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getSession, type SessionData } from "./auth-client";
+import { clearSessionCache, getSession, type SessionData } from "./auth-client";
 
 export function useSession() {
   const [data, setData] = useState<SessionData | null>(null);
@@ -9,14 +9,23 @@ export function useSession() {
 
   const refetch = useCallback(async () => {
     setIsPending(true);
+    clearSessionCache();
     const { data: session } = await getSession();
     setData(session ?? null);
     setIsPending(false);
   }, []);
 
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    let cancelled = false;
+    void getSession().then(({ data: session }) => {
+      if (cancelled) return;
+      setData(session ?? null);
+      setIsPending(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return {
     data: data ?? undefined,

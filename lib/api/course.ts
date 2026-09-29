@@ -24,19 +24,24 @@ export interface CourseContent {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+type FetchOptions = RequestInit & { skipAuth?: boolean };
+
 async function simpleFetch<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: FetchOptions
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  const authHeaders = await getApiAuthHeaders();
+  const { skipAuth, ...fetchOptions } = options ?? {};
+  const authHeaders = skipAuth
+    ? { "Content-Type": "application/json" }
+    : await getApiAuthHeaders();
 
   const response = await fetch(url, {
     credentials: "include",
-    ...options,
+    ...fetchOptions,
     headers: {
       ...authHeaders,
-      ...((options?.headers as Record<string, string>) ?? {}),
+      ...((fetchOptions.headers as Record<string, string>) ?? {}),
     },
   });
 
@@ -54,7 +59,7 @@ async function simpleFetch<T>(
 export class CourseApi {
   private static async request<T>(
     endpoint: string,
-    options?: RequestInit
+    options?: FetchOptions
   ): Promise<ApiResponse<T>> {
     try {
       const data = await simpleFetch<ApiResponse<T>>(endpoint, options);
@@ -83,7 +88,8 @@ export class CourseApi {
     console.log("📚 [Course API] getAllCourses called");
     return this.request<ICourse[]>("/courses", {
       method: "GET",
-    }); // Courses might be public
+      skipAuth: true,
+    });
   }
 
   static async getCatalog(): Promise<ICourse[]> {
@@ -227,31 +233,22 @@ export class CourseApi {
 // Instance methods for backward compatibility
 export const courseApi = {
   async fetchAllCourses(): Promise<ICourse[]> {
-    console.log("📚 [courseApi] fetchAllCourses called");
-    try {
-      const response = await CourseApi.getAllCourses();
-      console.log("📚 [courseApi] Response:", response);
-
-      // Handle both array and wrapped response formats
-      if (Array.isArray(response)) {
-        return response;
-      }
-
-      if (response && typeof response === "object" && "data" in response) {
-        return response.data;
-      }
-
-      // If response is already an array of courses
-      if (Array.isArray(response)) {
-        return response;
-      }
-
-      console.warn("📚 [courseApi] Unexpected response format:", response);
-      return [];
-    } catch (error) {
-      console.error("❌ [courseApi] Error fetching courses:", error);
-      throw error;
+    const url = `${API_BASE_URL}/courses`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error(
+        `API Error: ${response.status} - ${response.statusText}`,
+      );
     }
+    const data: unknown = await response.json();
+    if (Array.isArray(data)) return data as ICourse[];
+    if (data && typeof data === "object" && "data" in data) {
+      return (data as ApiResponse<ICourse[]>).data;
+    }
+    return [];
   },
 
   async fetchCatalog(): Promise<ICourse[]> {
