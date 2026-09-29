@@ -37,6 +37,7 @@ export const queryKeys = {
     details: () => [...queryKeys.courses.all, "detail"] as const,
     detail: (courseId: string) =>
       [...queryKeys.courses.details(), courseId] as const,
+    catalog: () => [...queryKeys.courses.all, "catalog"] as const,
     withContent: (courseId: string) =>
       [...queryKeys.courses.all, "withContent", courseId] as const,
   },
@@ -167,6 +168,10 @@ export const queryKeys = {
       [...queryKeys.reviews.all, "byCourse", courseId] as const,
     byUser: (userId: string) =>
       [...queryKeys.reviews.all, "byUser", userId] as const,
+  },
+
+  goals: {
+    all: ["goals"] as const,
   },
 } as const;
 

@@ -86,6 +86,18 @@ export class CourseApi {
     }); // Courses might be public
   }
 
+  static async getCatalog(): Promise<ICourse[]> {
+    const data = await simpleFetch<ICourse[] | ApiResponse<ICourse[]>>(
+      "/courses/catalog",
+      { method: "GET" }
+    );
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === "object" && "data" in data) {
+      return (data as ApiResponse<ICourse[]>).data;
+    }
+    return [];
+  }
+
   // GET /courses/:id - Get single course
   static async getCourseById(id: string): Promise<ICourse> {
     // For historical reasons, the courses API may return either:
@@ -240,6 +252,10 @@ export const courseApi = {
       console.error("❌ [courseApi] Error fetching courses:", error);
       throw error;
     }
+  },
+
+  async fetchCatalog(): Promise<ICourse[]> {
+    return CourseApi.getCatalog();
   },
 
   async fetchCourseById(id: string): Promise<ICourse> {

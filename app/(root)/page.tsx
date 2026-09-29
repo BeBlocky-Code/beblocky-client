@@ -15,7 +15,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   useCourses,
   useParentByUserId,
@@ -24,6 +24,7 @@ import {
   useStudentProgress,
 } from "@/lib/hooks";
 import { queryKeys } from "@/lib/query-keys";
+import { courseApi } from "@/lib/api/course";
 import { AddChildDialog } from "@/components/children/add-child-dialog";
 import {
   DashboardContentSkeleton,
@@ -51,6 +52,11 @@ export default function DashboardPage() {
   // Courses are needed by both roles, so this starts immediately instead of
   // waiting behind the parent/student lookup like the old effect did.
   const coursesQuery = useCourses();
+  const catalogQuery = useQuery({
+    queryKey: queryKeys.courses.catalog(),
+    queryFn: () => courseApi.fetchCatalog(),
+    enabled: !!userId && !isParent,
+  });
 
   // Parent branch: children can only be fetched once we know the parent id.
   const parentQuery = useParentByUserId(userId, isParent);
@@ -63,14 +69,16 @@ export default function DashboardPage() {
   const studentId = studentQuery.data?._id;
   const progressQuery = useStudentProgress(studentId, !isParent);
 
-  const courses = coursesQuery.data ?? [];
+  const courses = isParent
+    ? coursesQuery.data ?? []
+    : catalogQuery.data ?? [];
   const children = childrenQuery.data ?? [];
 
   // `isLoading` (not `isPending`) so disabled queries on the inactive branch
   // never hold the page back.
   const isDataLoading = isParent
     ? coursesQuery.isLoading || parentQuery.isLoading || childrenQuery.isLoading
-    : coursesQuery.isLoading ||
+    : catalogQuery.isLoading ||
       studentQuery.isLoading ||
       progressQuery.isLoading;
 
