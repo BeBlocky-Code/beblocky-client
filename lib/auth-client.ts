@@ -1,13 +1,11 @@
+import { authServiceUrl } from "@/lib/app-urls";
+
 /**
  * Auth client for beblocky-auth-service. Session is validated via cookie (same domain) or API.
  * Sign-in/sign-up happen on the auth app (redirect). This client provides session state and logout.
  */
 
-const AUTH_SERVICE_URL =
-  process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ??
-  (process.env.NODE_ENV === "production"
-    ? "https://auth-service.beblocky.com"
-    : "http://localhost:8080");
+const AUTH_SERVICE_URL = authServiceUrl();
 const AUTH_BASE = `${AUTH_SERVICE_URL.replace(/\/$/, "")}/api/v1`;
 
 export type SessionUser = {

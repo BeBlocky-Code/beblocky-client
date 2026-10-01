@@ -1,11 +1,9 @@
+import { dashboardAppUrl } from "@/lib/app-urls";
+
 const LEARNER_ROLES = ["student", "parent"] as const;
 const STAFF_ROLES = ["teacher", "admin", "organization"] as const;
 
-export const DASHBOARD_APP_URL =
-  process.env.NEXT_PUBLIC_DASHBOARD_APP_URL ??
-  (process.env.NODE_ENV === "production"
-    ? "https://dashboard.beblocky.com"
-    : "http://localhost:3003");
+export const DASHBOARD_APP_URL = dashboardAppUrl();
 
 export function hasLearnerRole(roles: string[]): boolean {
   return roles.some((role) =>

@@ -1,6 +1,7 @@
 import { ContactFormNotification } from "@/components/email/contact-form-notification";
 import { ContactFormConfirmation } from "@/components/email/contact-form-confirmation";
 import { render } from "@react-email/components";
+import { clientAppUrl } from "@/lib/app-urls";
 
 export interface ContactFormData {
   name: string;
@@ -160,7 +161,7 @@ class EmailService {
 
 const defaultEmailService = new EmailService({
   adminEmail: process.env.ADMIN_EMAIL || "app@beblocky.com",
-  appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://code.beblocky.com",
+  appUrl: clientAppUrl(),
   adminDashboardUrl: process.env.ADMIN_DASHBOARD_URL,
   helpCenterUrl: process.env.HELP_CENTER_URL,
 });
