@@ -11,6 +11,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { motion } from "framer-motion";
 import { TrendingUp, Users, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ProgressPageSkeleton } from "@/components/skeletons";
 
 export default function ProgressPage() {
@@ -28,7 +29,9 @@ export default function ProgressPage() {
     staleTime: 2 * 60 * 1000,
   });
 
-  const childrenProgress = summaryQuery.data ?? [];
+  const childrenProgress = Array.isArray(summaryQuery.data)
+    ? summaryQuery.data
+    : [];
   const loading =
     sessionPending || parentQuery.isLoading || summaryQuery.isLoading;
 
@@ -84,10 +87,20 @@ export default function ProgressPage() {
                 Notice
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <p className="text-sm text-orange-800 dark:text-orange-200">
                 {error}
               </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  void parentQuery.refetch();
+                  void summaryQuery.refetch();
+                }}
+              >
+                Try again
+              </Button>
             </CardContent>
           </Card>
         ) : (
