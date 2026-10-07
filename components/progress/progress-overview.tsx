@@ -18,6 +18,13 @@ import { formatGradeLabel } from "@/lib/utils";
 import type { ICourse } from "@/types/course";
 import type { IStudentWithUserData } from "@/types/enriched-student";
 
+function formatLastActive(value: unknown): string | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  if (Number.isNaN(date.getTime())) return null;
+  return format(date, "MMM d, yyyy");
+}
+
 interface ProgressOverviewProps {
   data: Array<{
     child: IStudentWithUserData;
@@ -40,15 +47,16 @@ export function ProgressOverview({
   const getOverallProgress = (courses: any[]) => {
     if (courses.length === 0) return 0;
     const totalProgress = courses.reduce(
-      (sum, { progress }) => sum + progress.percentage,
+      (sum, { progress }) => sum + (Number(progress?.percentage) || 0),
       0
     );
     return Math.round(totalProgress / courses.length);
   };
 
   const getTotalTimeSpent = (child: IStudentWithUserData) => {
-    const hours = Math.floor(child.totalTimeSpent / 60);
-    const minutes = child.totalTimeSpent % 60;
+    const minutesTotal = Number(child.totalTimeSpent) || 0;
+    const hours = Math.floor(minutesTotal / 60);
+    const minutes = minutesTotal % 60;
     return `${hours}h ${minutes}m`;
   };
 
@@ -76,7 +84,9 @@ export function ProgressOverview({
       ) : (
         <div className="space-y-4">
           {children.map(({ child, courses }) => {
-            const overallProgress = getOverallProgress(courses);
+            const courseList = courses ?? [];
+            const overallProgress = getOverallProgress(courseList);
+            const lastActive = formatLastActive(child.lastCodingActivity);
 
             return (
               <Card
@@ -102,7 +112,7 @@ export function ProgressOverview({
                           {child.name || "Unknown Child"}
                         </CardTitle>
                         <p className="text-muted-foreground">
-                          {formatGradeLabel(child.grade)} • {courses.length}{" "}
+                          {formatGradeLabel(child.grade)} • {courseList.length}{" "}
                           courses enrolled
                         </p>
                       </div>
@@ -138,7 +148,7 @@ export function ProgressOverview({
                         <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{courses.length}</p>
+                        <p className="text-sm font-medium">{courseList.length}</p>
                         <p className="text-xs text-muted-foreground">Courses</p>
                       </div>
                     </div>
@@ -147,7 +157,9 @@ export function ProgressOverview({
                         <Coins className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{child.coins}</p>
+                        <p className="text-sm font-medium">
+                          {Number(child.coins) || 0}
+                        </p>
                         <p className="text-xs text-muted-foreground">Coins</p>
                       </div>
                     </div>
@@ -157,7 +169,7 @@ export function ProgressOverview({
                       </div>
                       <div>
                         <p className="text-sm font-medium">
-                          {child.codingStreak}
+                          {Number(child.codingStreak) || 0}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Day Streak
@@ -180,11 +192,11 @@ export function ProgressOverview({
                   </div>
 
                   {/* Course Progress */}
-                  {courses.length > 0 && (
+                  {courseList.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="font-medium">Course Progress</h4>
                       <div className="space-y-3">
-                        {courses.slice(0, 3).map(({ course, progress }) => (
+                        {courseList.slice(0, 3).map(({ course, progress }) => (
                           <div
                             key={course._id}
                             className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
@@ -209,9 +221,9 @@ export function ProgressOverview({
                             </Badge>
                           </div>
                         ))}
-                        {courses.length > 3 && (
+                        {courseList.length > 3 && (
                           <p className="text-sm text-muted-foreground text-center">
-                            +{courses.length - 3} more courses
+                            +{courseList.length - 3} more courses
                           </p>
                         )}
                       </div>
@@ -219,13 +231,12 @@ export function ProgressOverview({
                   )}
 
                   {/* Last Activity */}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>
-                      Last active:{" "}
-                      {format(child.lastCodingActivity, "MMM d, yyyy")}
-                    </span>
-                  </div>
+                  {lastActive && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>Last active: {lastActive}</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
