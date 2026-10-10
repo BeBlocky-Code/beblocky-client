@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import {
   Home,
@@ -24,7 +25,13 @@ import { useSession } from "@/lib/auth-client";
 import { useState, useEffect } from "react";
 import Logo from "@/lib/images/logo.png";
 import IconLogo from "@/lib/images/icon-logo.png";
-import { ContactFormDialog } from "@/components/dialogs/contact-form-dialog";
+const ContactFormDialog = dynamic(
+  () =>
+    import("@/components/dialogs/contact-form-dialog").then(
+      (mod) => mod.ContactFormDialog,
+    ),
+  { ssr: false },
+);
 
 export type SidebarNavItem = {
   title: string;
@@ -90,7 +97,8 @@ export function AppSidebar({ items }: Props) {
       <div
         className={cn(
           "relative flex flex-col bg-card border-r border-border transition-all duration-300",
-          isCollapsed ? "w-16" : "w-64"
+          "w-64 max-md:w-16",
+          isCollapsed && "md:w-16"
         )}
       >
         {/* Collapse Button - Positioned on the left side of sidebar */}
@@ -129,16 +137,31 @@ export function AppSidebar({ items }: Props) {
           <div className="flex items-center justify-center">
             <Link
               href="/"
+              prefetch={false}
               className={cn(
-                "flex items-center gap-2",
+                "flex h-10 items-center gap-2",
                 isCollapsed && "justify-center"
               )}
             >
               <Image
-                src={isCollapsed ? IconLogo : Logo}
+                src={Logo}
                 alt="BeBlocky Logo"
-                width={isCollapsed ? 40 : 150}
-                height={isCollapsed ? 40 : 150}
+                width={150}
+                height={40}
+                className={cn(
+                  "h-10 w-auto max-md:hidden",
+                  isCollapsed && "md:hidden"
+                )}
+              />
+              <Image
+                src={IconLogo}
+                alt=""
+                width={40}
+                height={40}
+                className={cn(
+                  "hidden h-10 w-10 max-md:block",
+                  isCollapsed && "md:block"
+                )}
               />
             </Link>
           </div>
@@ -180,7 +203,7 @@ export function AppSidebar({ items }: Props) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1, duration: 0.3 }}
               >
-                <Link href={item.href}>
+                <Link href={item.href} prefetch={false}>
                   <div
                     className={cn(
                       "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:bg-accent hover:text-accent-foreground",
@@ -253,10 +276,12 @@ export function AppSidebar({ items }: Props) {
       </div>
 
       {/* Contact Form Dialog */}
-      <ContactFormDialog
-        isOpen={isContactDialogOpen}
-        onClose={() => setIsContactDialogOpen(false)}
-      />
+      {isContactDialogOpen ? (
+        <ContactFormDialog
+          isOpen
+          onClose={() => setIsContactDialogOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

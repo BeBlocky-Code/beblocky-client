@@ -30,7 +30,7 @@ export function StatsCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
     >
-      <Card className="p-6 transition-shadow duration-300 hover:shadow-md group">
+      <Card className="min-h-[9.25rem] p-6 transition-shadow duration-300 hover:shadow-md group">
         <div className="flex items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             {title}
