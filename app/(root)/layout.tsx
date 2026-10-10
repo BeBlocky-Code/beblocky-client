@@ -1,16 +1,16 @@
-"use client";
-
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { WorkspaceGate } from "@/components/layout/workspace-gate";
-import type React from "react";
+import { getServerWorkspaceSession } from "@/lib/server/workspace-session";
 
-interface RootLayoutProps {
+export default async function RootLayout({
+  children,
+}: {
   children: React.ReactNode;
-}
+}) {
+  const initialSession = await getServerWorkspaceSession();
 
-export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <WorkspaceGate>
+    <WorkspaceGate initialSession={initialSession}>
       <DashboardLayout>{children}</DashboardLayout>
     </WorkspaceGate>
   );

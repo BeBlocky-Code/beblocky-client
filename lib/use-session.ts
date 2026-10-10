@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { clearSessionCache, getSession, type SessionData } from "./auth-client";
+import { useWorkspaceSession } from "./workspace-session-context";
 
 export function useSession() {
-  const [data, setData] = useState<SessionData | null>(null);
-  const [isPending, setIsPending] = useState(true);
+  const seeded = useWorkspaceSession();
+  const hasServerSession = seeded?.valid === true && seeded.user != null;
+  const [data, setData] = useState<SessionData | null>(hasServerSession ? seeded : null);
+  const [isPending, setIsPending] = useState(!hasServerSession);
 
   const refetch = useCallback(async () => {
     setIsPending(true);
@@ -16,6 +19,7 @@ export function useSession() {
   }, []);
 
   useEffect(() => {
+    if (hasServerSession) return;
     let cancelled = false;
     void getSession().then(({ data: session }) => {
       if (cancelled) return;
@@ -25,7 +29,7 @@ export function useSession() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hasServerSession]);
 
   return {
     data: data ?? undefined,

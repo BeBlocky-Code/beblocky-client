@@ -37,7 +37,12 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL=https://api.beblocky.com
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
-# Set environment variables for build
+# Set environment variables for build.
+# NEXT_PUBLIC_* are inlined here. Changing them requires a rebuild.
+# AUTH_SERVICE_INTERNAL_URL is NOT set at build time. Set it on the running
+# container (Coolify), for example AUTH_SERVICE_INTERNAL_URL=http://auth-api:8080.
+# That address is the Docker network, not the public hostname, so the app
+# does not hairpin through the VPS to check the session.
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 

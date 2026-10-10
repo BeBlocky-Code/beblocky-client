@@ -88,7 +88,7 @@ export function PageHeaderSkeleton({
 /** Mirrors `components/shared/stats-card.tsx`. */
 export function StatsCardSkeleton({ showProgress = false }: { showProgress?: boolean }) {
   return (
-    <Card className="p-6">
+    <Card className="min-h-[9.25rem] p-6">
       <div className="flex items-center justify-between space-y-0 pb-2">
         <Skeleton className="h-4 w-28" />
         <Skeleton className="h-8 w-8 rounded-lg" />
