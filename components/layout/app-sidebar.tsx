@@ -22,7 +22,7 @@ import { UserButton } from "./user-button";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSession } from "@/lib/auth-client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type MouseEvent } from "react";
 import Logo from "@/lib/images/logo.png";
 import IconLogo from "@/lib/images/icon-logo.png";
 const ContactFormDialog = dynamic(
@@ -63,6 +63,20 @@ export function AppSidebar({ items }: Props) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  // Href of a sidebar link that was just clicked, shown as active right away
+  // instead of waiting for the RSC round trip to update usePathname().
+  const [pending, setPending] = useState<{ href: string; from: string } | null>(
+    null
+  );
+  const activePath =
+    pending && pending.from === path ? pending.href : (path ?? "");
+
+  const handleNavClick = (href: string) => (e: MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+      return;
+    }
+    if (href !== path) setPending({ href, from: path ?? "" });
+  };
 
   const role = session?.user?.roles?.[0] ?? "student";
 
@@ -85,11 +99,12 @@ export function AppSidebar({ items }: Props) {
     }
   }, [isMobile]);
 
-  // Helper to check active link
+  // Helper to check active link. A clicked link is shown as active immediately
+  // via `pending`, and the previously active link stops looking active.
   const checkActive = (item: SidebarNavItem) => {
     return item.useInclude
-      ? path?.includes(item.href ?? "")
-      : path === item.href;
+      ? activePath.includes(item.href ?? "")
+      : activePath === item.href;
   };
 
   return (
@@ -203,7 +218,11 @@ export function AppSidebar({ items }: Props) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1, duration: 0.3 }}
               >
-                <Link href={item.href} prefetch={false}>
+                <Link
+                  href={item.href}
+                  prefetch={false}
+                  onClick={handleNavClick(item.href)}
+                >
                   <div
                     className={cn(
                       "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:bg-accent hover:text-accent-foreground",

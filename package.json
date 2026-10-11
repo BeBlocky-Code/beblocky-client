@@ -12,7 +12,7 @@
     "start": "next start",
     "lint": "eslint .",
     "analyze": "ANALYZE=true next build --webpack",
-    "test": "node --experimental-strip-types --test lib/app-urls.test.ts lib/prefetch-request.test.ts",
+    "test": "node --experimental-strip-types --test lib/app-urls.test.ts lib/prefetch-request.test.ts lib/session-cache.test.ts",
     "maintenance:status": "node scripts/toggle-maintenance.js status",
     "maintenance:on": "node scripts/toggle-maintenance.js on",
     "maintenance:off": "node scripts/toggle-maintenance.js off",

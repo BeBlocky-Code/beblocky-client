@@ -53,12 +53,28 @@ let sessionInflight: Promise<{
   data?: SessionData;
   error?: { code: string; message: string };
 }> | null = null;
+let seededToken: string | undefined;
 const SESSION_TTL_MS = 5 * 60 * 1000;
 
 export function clearSessionCache() {
   cachedSession = null;
   cachedSessionAt = 0;
   sessionInflight = null;
+  seededToken = undefined;
+}
+
+/**
+ * Seed the auth-client cache from a server-verified session. Calling this
+ * synchronously during render prevents child effects and API calls from
+ * re-fetching /auth/session and /account.
+ */
+export function seedSessionCache(session: SessionData) {
+  // Server renders share module state across requests; only seed in the browser.
+  if (typeof window === "undefined") return;
+  if (!session.token || seededToken === session.token) return;
+  cachedSession = { data: session };
+  cachedSessionAt = Date.now();
+  seededToken = session.token;
 }
 
 export async function getSession(): Promise<{
@@ -71,20 +87,23 @@ export async function getSession(): Promise<{
   if (sessionInflight) return sessionInflight;
 
   sessionInflight = (async () => {
-    const { data: sessionData, error, status } = await authFetch<{
-      valid?: boolean;
-      user?: { id: string };
-      token?: string;
-      session?: unknown;
-    }>("/auth/session");
+    const [{ data: sessionData, error, status }, accountRes] =
+      await Promise.all([
+        authFetch<{
+          valid?: boolean;
+          user?: { id: string };
+          token?: string;
+          session?: unknown;
+        }>("/auth/session"),
+        authFetch<{
+          name?: string;
+          email?: string;
+          image_url?: string;
+          roles?: string[];
+        }>("/account"),
+      ]);
     if (status === 200 && sessionData?.valid && sessionData?.user?.id) {
       const user: SessionUser = { id: sessionData.user.id };
-      const accountRes = await authFetch<{
-        name?: string;
-        email?: string;
-        image_url?: string;
-        roles?: string[];
-      }>("/account");
       if (accountRes.data) {
         user.name = accountRes.data.name;
         user.email = accountRes.data.email;
