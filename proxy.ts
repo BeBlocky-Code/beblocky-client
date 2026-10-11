@@ -27,6 +27,10 @@ const publicPathPatterns = [
 
 const ACCT_OK_COOKIE = "acct_ok";
 const ACCT_OK_MAX_AGE = 300; // 5 minutes
+// When the account check times out or errors we let the user through and
+// remember that for a short time, so a slow auth-service costs one timeout
+// instead of one per navigation.
+const ACCT_OK_DEGRADED_MAX_AGE = 60;
 
 function buildAcctOkCookieHeader(
   value: string,
@@ -123,11 +127,13 @@ export async function proxy(request: NextRequest) {
     // full document load already verified the account) and when we have a
     // fresh, token-bound `acct_ok` cookie.
     const skipCheck =
-      isRscRequest(headerGet) || (acctOk != null && acctOk === tokenHash);
+      isRscRequest(headerGet, request.nextUrl.searchParams) ||
+      (acctOk != null && acctOk === tokenHash);
 
     // Only a real check refreshes the cookie, so it can't slide forever and
     // the account is re-verified at least every ACCT_OK_MAX_AGE seconds.
-    let accountVerified = false;
+    // null = no cookie to set; otherwise the Max-Age for the new acct_ok.
+    let acctOkMaxAge: number | null = null;
 
     if (!skipCheck) {
       try {
@@ -153,8 +159,13 @@ export async function proxy(request: NextRequest) {
           return redirectRes;
         }
         if (res.status === 200) {
-          const data = (await res.json()) as { complete?: boolean };
-          if (data.complete === false) {
+          const data = (await res.json()) as {
+            complete?: boolean;
+            readiness_unknown?: boolean;
+          };
+          // readiness_unknown: auth-service could not read student readiness
+          // and reports complete:true; treat it as OK but re-check sooner.
+          if (data.complete === false && data.readiness_unknown !== true) {
             const callbackUrl = buildCallbackUrl(request, AUTH_APP_URL);
             const onboardingUrl = `${AUTH_APP_URL.replace(/\/$/, "")}/onboarding?${new URLSearchParams({ callbackUrl, origin: "client" }).toString()}`;
             const onboardingRes = NextResponse.redirect(onboardingUrl);
@@ -164,20 +175,32 @@ export async function proxy(request: NextRequest) {
             );
             return onboardingRes;
           }
-          accountVerified = true;
+          acctOkMaxAge =
+            data.readiness_unknown === true
+              ? ACCT_OK_DEGRADED_MAX_AGE
+              : ACCT_OK_MAX_AGE;
+        } else {
+          // 5xx or other unexpected status: allow through, re-check soon.
+          acctOkMaxAge = ACCT_OK_DEGRADED_MAX_AGE;
         }
       } catch {
-        // Allow through if auth-service is unreachable to avoid locking users out
+        // Timeout or unreachable auth-service: allow through to avoid locking
+        // users out, and cache that briefly so the next clicks don't each
+        // wait for the timeout again.
+        acctOkMaxAge = ACCT_OK_DEGRADED_MAX_AGE;
       }
     }
 
     // After a successful account check, set the short-lived
     // `acct_ok` cookie so the next request can skip the round-trip.
-    if (accountVerified) {
+    if (acctOkMaxAge !== null) {
       const res = NextResponse.next();
       res.headers.append(
         "Set-Cookie",
-        buildAcctOkCookieHeader(tokenHash, { secure: isSecure })
+        buildAcctOkCookieHeader(tokenHash, {
+          secure: isSecure,
+          maxAge: acctOkMaxAge,
+        })
       );
       return res;
     }
