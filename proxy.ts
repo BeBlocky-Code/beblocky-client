@@ -14,6 +14,7 @@ import {
 import { authAppUrl } from "@/lib/app-urls";
 import { isPrefetchRequest } from "@/lib/prefetch-request";
 import { fetchAuthService } from "@/lib/server/same-host-fetch";
+import { hashToken, isRscRequest } from "@/lib/session-cache";
 
 const AUTH_APP_URL = authAppUrl();
 
@@ -24,8 +25,28 @@ const publicPathPatterns = [
   /^\/maintenance/,
 ];
 
+const ACCT_OK_COOKIE = "acct_ok";
+const ACCT_OK_MAX_AGE = 300; // 5 minutes
+
+function buildAcctOkCookieHeader(
+  value: string,
+  options: { secure?: boolean; maxAge?: number }
+): string {
+  const maxAge = options.maxAge ?? ACCT_OK_MAX_AGE;
+  const parts = [
+    `${ACCT_OK_COOKIE}=${value}`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    `Max-Age=${maxAge}`,
+  ];
+  if (options.secure) parts.push("Secure");
+  return parts.join("; ");
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isSecure = request.url.startsWith("https");
 
   // After login/OAuth, auth redirects here with ?token=...; set session cookie and clean URL.
   const rawToken = request.nextUrl.searchParams.get("token");
@@ -36,7 +57,6 @@ export async function proxy(request: NextRequest) {
     target.searchParams.delete("callbackUrl");
     target.searchParams.delete("origin");
     const res = NextResponse.redirect(target);
-    const isSecure = request.url.startsWith("https");
     // Avoid Next cookies.set percent-encoding ("=" → "%3D") which breaks token hashing.
     res.headers.append(
       "Set-Cookie",
@@ -95,34 +115,71 @@ export async function proxy(request: NextRequest) {
     !isPublicPath &&
     !isPrefetchRequest((name) => request.headers.get(name))
   ) {
-    try {
-      const res = await fetchAuthService("/api/v1/account/complete", {
-        headers: {
-          Authorization: `Bearer ${sessionToken}`,
-          Cookie: `session=${sessionToken}`,
-        },
-      });
-      if (res.status === 401) {
-        const callbackUrl = buildCallbackUrl(request, AUTH_APP_URL);
-        const redirectRes = NextResponse.redirect(
-          buildAuthRedirectUrl(AUTH_APP_URL, callbackUrl, "client")
-        );
-        redirectRes.headers.append(
-          "Set-Cookie",
-          "session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
-        );
-        return redirectRes;
-      }
-      if (res.status === 200) {
-        const data = (await res.json()) as { complete?: boolean };
-        if (data.complete === false) {
+    const headerGet = (name: string) => request.headers.get(name);
+    const acctOk = request.cookies.get(ACCT_OK_COOKIE)?.value;
+    const tokenHash = await hashToken(sessionToken);
+
+    // Skip the auth-service account check for in-app RSC navigations (the
+    // full document load already verified the account) and when we have a
+    // fresh, token-bound `acct_ok` cookie.
+    const skipCheck =
+      isRscRequest(headerGet) || (acctOk != null && acctOk === tokenHash);
+
+    // Only a real check refreshes the cookie, so it can't slide forever and
+    // the account is re-verified at least every ACCT_OK_MAX_AGE seconds.
+    let accountVerified = false;
+
+    if (!skipCheck) {
+      try {
+        const res = await fetchAuthService("/api/v1/account/complete", {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+            Cookie: `session=${sessionToken}`,
+          },
+        });
+        if (res.status === 401) {
           const callbackUrl = buildCallbackUrl(request, AUTH_APP_URL);
-          const onboardingUrl = `${AUTH_APP_URL.replace(/\/$/, "")}/onboarding?${new URLSearchParams({ callbackUrl, origin: "client" }).toString()}`;
-          return NextResponse.redirect(onboardingUrl);
+          const redirectRes = NextResponse.redirect(
+            buildAuthRedirectUrl(AUTH_APP_URL, callbackUrl, "client")
+          );
+          redirectRes.headers.append(
+            "Set-Cookie",
+            "session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+          );
+          redirectRes.headers.append(
+            "Set-Cookie",
+            buildAcctOkCookieHeader("", { secure: isSecure, maxAge: 0 })
+          );
+          return redirectRes;
         }
+        if (res.status === 200) {
+          const data = (await res.json()) as { complete?: boolean };
+          if (data.complete === false) {
+            const callbackUrl = buildCallbackUrl(request, AUTH_APP_URL);
+            const onboardingUrl = `${AUTH_APP_URL.replace(/\/$/, "")}/onboarding?${new URLSearchParams({ callbackUrl, origin: "client" }).toString()}`;
+            const onboardingRes = NextResponse.redirect(onboardingUrl);
+            onboardingRes.headers.append(
+              "Set-Cookie",
+              buildAcctOkCookieHeader("", { secure: isSecure, maxAge: 0 })
+            );
+            return onboardingRes;
+          }
+          accountVerified = true;
+        }
+      } catch {
+        // Allow through if auth-service is unreachable to avoid locking users out
       }
-    } catch {
-      // Allow through if auth-service is unreachable to avoid locking users out
+    }
+
+    // After a successful account check, set the short-lived
+    // `acct_ok` cookie so the next request can skip the round-trip.
+    if (accountVerified) {
+      const res = NextResponse.next();
+      res.headers.append(
+        "Set-Cookie",
+        buildAcctOkCookieHeader(tokenHash, { secure: isSecure })
+      );
+      return res;
     }
   }
 
